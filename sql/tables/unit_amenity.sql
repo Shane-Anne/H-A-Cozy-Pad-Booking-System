@@ -10,4 +10,4 @@ create table unit_amenity(
         foreign key (amenity_id)
         references unit_amenities(amenity_id)
         on delete cascade
-)
+);
