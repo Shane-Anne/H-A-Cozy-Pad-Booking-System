@@ -16,23 +16,3 @@ create table notifications(
         references bookings(booking_id)
         on delete set null
 );
-/*
-    CREATE TABLE notifications (
-        notification_id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        booking_id INT NULL,
-        type ENUM('booking', 'payment', 'reminder', 'cancellation', 'system') NOT NULL,
-        message TEXT NOT NULL,
-        is_read BOOLEAN NOT NULL DEFAULT FALSE,
-        sent_at DATETIME NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_notification_user
-            FOREIGN KEY (user_id)
-            REFERENCES users(user_id)
-            ON DELETE CASCADE,
-        CONSTRAINT fk_notification_booking
-            FOREIGN KEY (booking_id)
-            REFERENCES bookings(booking_id)
-            ON DELETE SET NULL
-    );
-*/
