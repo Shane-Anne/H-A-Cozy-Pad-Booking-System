@@ -3,7 +3,7 @@
     $username = "root";
     $password = "";
     $db = "ha_cozy_pad_db";
-
+    
     try {
         $pdo = new PDO (
             "mysql:host=$host,dbname=$db;charset=utf8mb4", 
