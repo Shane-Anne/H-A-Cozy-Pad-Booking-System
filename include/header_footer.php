@@ -41,5 +41,21 @@
             <?php endif; ?> 
         </nav>
     </header>
+
+    <main class="page-content"></main>
+
+    <footer class="main-footer">
+        <div>
+            <strong>H&A Cozy Pad</strong>
+            <p>Hotel-like Staycation</p>
+        </div>
+
+        <div>
+            <p>&copy; <?= date("Y") ?> H&A Cozy Pad. All Rights Reserved.</p>
+        </div>
+    </footer>
+    
+    <!-- lagay here location of javascript pls -->
+    <script></script>
 </body>
 </html>
