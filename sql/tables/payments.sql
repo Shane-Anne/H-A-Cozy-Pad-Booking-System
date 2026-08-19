@@ -2,7 +2,7 @@ create table payments(
     payment_id int auto_increment primary key,
     booking_id int not null,
     amount decimal(10, 2) not null,
-    payment_method enum('e-wallet', 'bank_transfer', 'cash', 'card') not null,
+    payment_method enum('e-wallet', 'cash') not null,
     proof_of_payment varchar(255) not null,
     payment_status enum('pending', 'verified', 'rejected', 'refunded') not null default 'pending',
     verified_by int null,
