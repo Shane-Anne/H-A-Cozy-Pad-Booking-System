@@ -6,6 +6,6 @@ create table faqs(
     created_at timestamp default current_timestamp,
     constraint fk_faq_category
         foreign key (category_id)
-        references faq_categories(category_id)
+        references faqs_categories(category_id)
         on delete cascade
 );

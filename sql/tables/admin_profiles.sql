@@ -3,8 +3,7 @@ create table admin_profiles(
     user_id int not null unique,
     position enum('admin', 'assistant') not null,
     created_at timestamp default current_timestamp,
-    constraint fk_admin_user
-        foreign key (user_id)
+    foreign key (user_id)
         references users(user_id)
         on delete cascade
 );
