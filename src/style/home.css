@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+.hamburger {
+  width: 55px;
+  height: 55px;
+  background: #d4d4d4;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.hamburger-bar,
+.hamburger-bar::before,
+.hamburger-bar::after {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #555;
+}
+
+.hamburger-bar {
+  position: relative;
+}
+
+.hamburger-bar::before,
+.hamburger-bar::after {
+  position: absolute;
+  left: 0;
+}
+
+.hamburger-bar::before { top: -7px; }
+.hamburger-bar::after  { top: 7px; }
