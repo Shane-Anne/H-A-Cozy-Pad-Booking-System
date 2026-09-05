@@ -5,7 +5,7 @@ create table unit_amenity(
     constraint fk_unit_amenity_unit
         foreign key (unit_id)
         references units(unit_id)
-        on delete cascade
+        on delete cascade,
     constraint fk_unit_amenity_amenity
         foreign key (amenity_id)
         references unit_amenities(amenity_id)

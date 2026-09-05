@@ -6,7 +6,7 @@ create table bookings(
     check_out_date date not null,
     num_of_guests int not null default 1,
     status enum('pending', 'awaiting_payment', 'payment_review', 'confirmed', 'checked_in', 'checked_out', 
-                'cancelled', 'rejected') not null default 'pending';
+                'cancelled', 'rejected') not null default 'pending',
     created_at timestamp default current_timestamp,
     updated_at timestamp default current_timestamp on update current_timestamp,
     constraint fk_booking_customer
@@ -16,5 +16,5 @@ create table bookings(
         foreign key (unit_id)
         references units(unit_id),
     constraint chk_booking_dates
-        check(check_out_date > check_in_date);
+        check(check_out_date > check_in_date)
 );

@@ -5,7 +5,7 @@ create table payments(
     payment_method enum('e-wallet', 'bank_transfer', 'cash', 'card') not null,
     proof_of_payment varchar(255) not null,
     payment_status enum('pending', 'verified', 'rejected', 'refunded') not null default 'pending',
-    verified_by int not null,
+    verified_by int null,
     verified_at datetime not null,
     created_at timestamp default current_timestamp,
     constraint fk_payment_booking
