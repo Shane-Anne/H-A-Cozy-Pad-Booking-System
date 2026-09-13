@@ -4,9 +4,12 @@ export default function RegisterModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    dob: '',
     email: '',
+    contactNum: '',
+    password: '',
   });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lock body scroll and register escape key (from register.js)
   useEffect(() => {
@@ -33,10 +36,37 @@ export default function RegisterModal({ isOpen, onClose }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Register submitted:', formData);
-    onClose();
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/register.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email,
+          contactNum: formData.contactNum,
+          password: formData.password,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong. Please try again.');
+        return;
+      }
+
+      console.log('Registered:', data.user);
+      onClose();
+    } catch (err) {
+      setError('Could not reach the server. Is XAMPP running?');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,15 +114,18 @@ export default function RegisterModal({ isOpen, onClose }) {
           </div>
 
           <div className="flex flex-col gap-3">
-            <span className="text-lg font-semibold">Date of Birth</span>
+            <span className="text-lg font-semibold">Contact Number</span>
             <label className="flex flex-col justify-center gap-1 border border-neutral-300 rounded-xl px-5 py-3.5 min-h-[62px] focus-within:border-black transition-colors cursor-text">
-              <span className="text-xs text-neutral-400 leading-none">Birth date</span>
+              <span className="text-xs text-neutral-400 leading-none">11-digit mobile number</span>
               <input
-                type="date"
-                name="dob"
-                value={formData.dob}
+                type="tel"
+                name="contactNum"
+                value={formData.contactNum}
                 onChange={handleChange}
-                className="w-full border-none outline-none bg-transparent text-lg leading-none p-0 [color-scheme:light] [&::-webkit-datetime-edit]:text-neutral-400 [&::-webkit-datetime-edit-fields-wrapper]:text-neutral-400"
+                placeholder="09171234567"
+                maxLength={11}
+                pattern="[0-9]{11}"
+                className="w-full border-none outline-none bg-transparent text-lg leading-none p-0 placeholder:text-neutral-400"
                 required
               />
             </label>
@@ -114,6 +147,26 @@ export default function RegisterModal({ isOpen, onClose }) {
             </label>
           </div>
 
+          <div className="flex flex-col gap-3">
+            <span className="text-lg font-semibold">Password</span>
+            <label className="flex flex-col justify-center gap-1 border border-neutral-300 rounded-xl px-5 py-3.5 min-h-[62px] focus-within:border-black transition-colors cursor-text">
+              <span className="text-xs text-neutral-400 leading-none">At least 8 characters</span>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                minLength={8}
+                className="w-full border-none outline-none bg-transparent text-lg leading-none p-0"
+                required
+              />
+            </label>
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
+
           <p className="text-sm text-neutral-500 leading-relaxed">
             By selecting Agree and register, I agree to the{' '}
             <a href="#" className="underline text-black">Terms of Service</a>,{' '}
@@ -124,9 +177,10 @@ export default function RegisterModal({ isOpen, onClose }) {
 
           <button
             type="submit"
-            className="mt-2 w-full py-4 text-xl sm:text-2xl font-bold text-white bg-black border border-black rounded-full hover:bg-neutral-800 transition-colors cursor-pointer"
+            disabled={isSubmitting}
+            className="mt-2 w-full py-4 text-xl sm:text-2xl font-bold text-white bg-black border border-black rounded-full hover:bg-neutral-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Agree & Register
+            {isSubmitting ? 'Registering...' : 'Agree & Register'}
           </button>
         </form>
       </div>

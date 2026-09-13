@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lock body scroll and register escape key (from login.js)
   useEffect(() => {
@@ -22,10 +24,33 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login submitted:', { identifier, password });
-    onClose();
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/login.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // sends/receives the PHP session cookie
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong. Please try again.');
+        return;
+      }
+
+      // data.user now has { id, firstName, lastName, email }
+      console.log('Logged in:', data.user);
+      onClose();
+    } catch (err) {
+      setError('Could not reach the server. Is XAMPP running?');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -48,7 +73,7 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
             type="text"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="Phone number or Email Address"
+            placeholder="Email Address"
             className="w-full border border-neutral-300 rounded-full px-6 py-4 text-lg outline-none focus:border-black transition-colors"
             required
           />
@@ -60,6 +85,9 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
             className="w-full border border-neutral-300 rounded-full px-6 py-4 text-lg outline-none focus:border-black transition-colors"
             required
           />
+          {error && (
+            <p className="text-sm text-red-600 -mt-2">{error}</p>
+          )}
           <button
             type="button"
             onClick={(e) => {
@@ -72,9 +100,10 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
           </button>
           <button
             type="submit"
-            className="mt-2 w-full py-4 text-xl sm:text-2xl font-bold text-white bg-black border border-black rounded-full hover:bg-neutral-800 transition-colors cursor-pointer"
+            disabled={isSubmitting}
+            className="mt-2 w-full py-4 text-xl sm:text-2xl font-bold text-white bg-black border border-black rounded-full hover:bg-neutral-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Log In
+            {isSubmitting ? 'Logging in...' : 'Log In'}
           </button>
         </form>
       </div>

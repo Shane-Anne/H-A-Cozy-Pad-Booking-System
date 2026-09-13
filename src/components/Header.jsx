@@ -29,15 +29,15 @@ export default function Header({
 
   return (
     <header className="flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
-      <Link to="/" className="text-3xl lg:text-4xl font-bold text-black no-underline">
+      <a href="#" className="text-3xl lg:text-4xl font-bold text-black no-underline">
         H&A Cozy Pad
-      </Link>
-
+      </a>
+      
       <nav className="hidden md:block">
         <ul className="flex gap-8 list-none m-0 p-0">
-          <li><Link to="/all" className="text-xl hover:underline">All</Link></li>
-          <li><Link to="/homes" className="text-xl hover:underline">Homes</Link></li>
-          <li><Link to="/host/reservations" className="text-xl hover:underline">Reservations</Link></li>
+          <li><a href="#" className="text-xl hover:underline">All</a></li>
+          <li><a href="#" className="text-xl hover:underline">Homes</a></li>
+          <li><a href="#" className="text-xl hover:underline">Reservations</a></li>
         </ul>
       </nav>
 
