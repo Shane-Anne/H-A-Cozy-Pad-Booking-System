@@ -107,7 +107,7 @@ export default function PlaceDescription() {
         <button
             type="button"
             disabled={!selectedProperty}
-            onClick={() => navigate('/host/listing/PropertyDescription')}
+            onClick={() => navigate('/host/listing/ListingPublish')}
             className={`
                 w-[142px] h-[50px]
                 rounded-full
