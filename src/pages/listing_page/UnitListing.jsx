@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ListingHeader from '../components/ListingHeader';
+import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
 
 export default function UnitListing() {
@@ -89,7 +89,7 @@ export default function UnitListing() {
           {/* Exit */}
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() => navigate('/host/listings')}
             className="
               w-[142px] h-[50px]
               rounded-full

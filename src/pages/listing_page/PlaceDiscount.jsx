@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ListingHeader from '../components/ListingHeader';
+import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
 
 function CheckSquare({ checked }) {

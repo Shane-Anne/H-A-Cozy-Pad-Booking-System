@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import ListingHeader from '../components/ListingHeader';
+import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
+import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
 
 let bedroomIdCounter = 1;
 let bedIdCounter = 1;
@@ -121,11 +122,12 @@ function BedTypeRow({ bed, onChange, onRemove, canRemove }) {
 
 export default function RoomsRates() {
   const navigate = useNavigate();
+  const draft = getListingDraft();
 
   const [bedrooms, setBedrooms] = useState([makeBedroom()]);
-  const [bathrooms, setBathrooms] = useState(1);
-  const [maxGuests, setMaxGuests] = useState(1);
-  const [nightlyRate, setNightlyRate] = useState('');
+  const [bathrooms, setBathrooms] = useState(draft.bathrooms || 1);
+  const [maxGuests, setMaxGuests] = useState(draft.maxGuests || 1);
+  const [nightlyRate, setNightlyRate] = useState(draft.ratePerNight || '');
 
   const addBedroom = () => {
     setBedrooms((prev) => [...prev, makeBedroom()]);
@@ -249,13 +251,19 @@ export default function RoomsRates() {
               label="Number of Bathrooms"
               value={bathrooms}
               min={1}
-              onChange={setBathrooms}
+              onChange={(value) => {
+                setBathrooms(value);
+                updateListingDraft({ bathrooms: value });
+              }}
             />
             <Counter
               label="Max guests allowed"
               value={maxGuests}
               min={1}
-              onChange={setMaxGuests}
+              onChange={(value) => {
+                setMaxGuests(value);
+                updateListingDraft({ maxGuests: value });
+              }}
             />
           </div>
 
@@ -271,7 +279,10 @@ export default function RoomsRates() {
                 type="number"
                 min="0"
                 value={nightlyRate}
-                onChange={(e) => setNightlyRate(e.target.value)}
+                onChange={(e) => {
+                  setNightlyRate(e.target.value);
+                  updateListingDraft({ ratePerNight: e.target.value });
+                }}
                 placeholder="0"
                 className="w-full h-[52px] border border-black rounded-full pl-5 pr-28 text-[15px] placeholder:text-neutral-400 focus:outline-none focus:bg-neutral-50"
               />

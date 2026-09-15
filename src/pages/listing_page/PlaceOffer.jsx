@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import ListingHeader from '../components/ListingHeader';
+import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
+import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
 
 const amenities = [
   { id: 'wifi', title: 'WiFi', icon: '📶' },
@@ -18,13 +19,25 @@ const amenities = [
 ];
 
 export default function PlaceOffer() {
-  const [selectedAmenities, setSelectedAmenities] = useState([]);
+  const draft = getListingDraft();
+  const [selectedAmenities, setSelectedAmenities] = useState(
+    draft.amenityIds || []
+  );
   const navigate = useNavigate();
 
   const toggleAmenity = (id) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    setSelectedAmenities((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((item) => item !== id)
+        : [...prev, id];
+      updateListingDraft({
+        amenityIds: next,
+        amenities: next.map((amenityId) =>
+          amenities.find((amenity) => amenity.id === amenityId)?.title
+        ),
+      });
+      return next;
+    });
   };
 
   return (

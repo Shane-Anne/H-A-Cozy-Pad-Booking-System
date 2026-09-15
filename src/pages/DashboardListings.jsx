@@ -1,22 +1,66 @@
 import React, { useEffect, useState } from 'react';
 import HostHeader from '../components/HostHeader';
+import { API_BASE_URL } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardListings() {
+  const navigate = useNavigate();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
+  const [error, setError] = useState('');
+  const [selectedBuildingId, setSelectedBuildingId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const deleteListing = async () => {
+    if (!selectedBuildingId || !window.confirm('Delete this listing?')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/delete_listing.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buildingId: selectedBuildingId }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to delete listing');
+      }
+
+      setListings((currentListings) =>
+        currentListings.filter((listing) => listing.building_id !== selectedBuildingId)
+      );
+      setSelectedBuildingId(null);
+    } catch (deleteError) {
+      setError(deleteError.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
-    fetch('http://localhost/api/listings.php', {
-      credentials: 'include'
-    })
-      .then((response) => response.json())
+    fetch(`${API_BASE_URL}/available_listings.php`, { cache: 'no-store' })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || `Unable to load listings (${response.status})`);
+        }
+        return data;
+      })
       .then((data) => {
+        if (!Array.isArray(data)) {
+          throw new Error(data.error || 'Unable to load listings');
+        }
         setListings(data);
         setLoading(false);
       })
       .catch((error) => {
         console.error('Error fetching listings:', error);
+        setError(error.message);
         setLoading(false);
       });
   }, []);
@@ -29,11 +73,16 @@ export default function DashboardListings() {
         <div className="flex items-center justify-between mb-10">
           <h1 className="text-4xl font-bold">Your Listing</h1>
           <div className="flex gap-3">
-            <button className="px-6 py-2.5 text-base font-medium border border-neutral-300 rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer">
-              Delete
+            <button
+              type="button"
+              disabled={!selectedBuildingId || isDeleting}
+              onClick={deleteListing}
+              className="px-6 py-2.5 text-base font-medium border border-neutral-300 rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </button>
             <button 
-              onClick={() => setIsAdding(true)}
+              onClick={() => navigate('/host/listing')}
               className="px-6 py-2.5 text-base font-medium border border-neutral-300 rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer">
                 Add
             </button>
@@ -42,6 +91,13 @@ export default function DashboardListings() {
 
         {loading ? (
           <p>Loading listings...</p>
+        ) : error ? (
+          <p className="text-red-600">{error}</p>
+        ) : listings.length === 0 ? (
+          <div className="py-20 text-center text-neutral-500">
+            <p className="text-2xl font-medium">No listings yet</p>
+            <p className="mt-2">Add your first housing listing to see it here.</p>
+          </div>
         ) : (
           <table className="w-full border-collapse">
             <thead>
@@ -55,7 +111,13 @@ export default function DashboardListings() {
 
             <tbody>
               {listings.map((listing) => (
-                <tr key={listing.unit_id} className="border-b border-neutral-100">
+                <tr
+                  key={listing.unit_id}
+                  onClick={() => setSelectedBuildingId(listing.building_id)}
+                  className={`border-b border-neutral-100 cursor-pointer transition-colors ${
+                    selectedBuildingId === listing.building_id ? 'bg-neutral-100' : ''
+                  }`}
+                >
                   <td className="py-4">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 shrink-0 rounded-lg bg-neutral-300 flex items-center justify-center">

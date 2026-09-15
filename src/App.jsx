@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Header from './components/Header';
@@ -10,18 +10,35 @@ import RegisterModal from './components/RegisterModal';
 import HelpCenter from './pages/HelpCenter';
 import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
-import PlaceOffer from './pages/PlaceOffer';
-import UnitListing from './pages/UnitListing';
-import PropertyDescription from './pages/PropertyDescription';
-import PlaceDescription from './pages/PlaceDescription';
-import PlaceLocation from './pages/PlaceLocation';
-import PlaceRate from './pages/PlaceRate';
-import PlaceDiscount from './pages/PlaceDiscount';
-import PlaceDetail from './pages/PlaceDetail';
-import ListingPublish from './pages/ListingPublish';
+
+//listing pages
+import PlaceOffer from './pages/listing_page/PlaceOffer';
+import UnitListing from './pages/listing_page/UnitListing';
+import PropertyDescription from './pages/listing_page/PropertyDescription';
+import PlaceDescription from './pages/listing_page/PlaceDescription';
+import PlaceLocation from './pages/listing_page/PlaceLocation';
+import PlaceRate from './pages/listing_page/PlaceRate';
+import PlaceDiscount from './pages/listing_page/PlaceDiscount';
+import PlaceDetail from './pages/listing_page/PlaceDetail';
+import ListingPublish from './pages/listing_page/ListingPublish';
+import { API_BASE_URL } from './lib/api';
 
 // Home page wrapper containing the main landing sections
 function HomePage({ onOpenSignIn, onOpenRegister, isMenuOpen, setIsMenuOpen }) {
+  const [properties, setProperties] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/available_listings.php`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Unable to load available housing');
+        }
+        return response.json();
+      })
+      .then(setProperties)
+      .catch((error) => console.error(error));
+  }, []);
+
   return (
     <div className="bg-white text-black font-sans min-h-screen flex flex-col">
       <Header
@@ -32,8 +49,7 @@ function HomePage({ onOpenSignIn, onOpenRegister, isMenuOpen, setIsMenuOpen }) {
       />
       <main className="grow">
         <SearchSection />
-        <PropertySection title="Popular Homes Nearby" />
-        <PropertySection title="Popular Homes in Philippines" />
+        <PropertySection properties={properties} />
       </main>
       <Footer />
     </div>

@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import ListingHeader from '../components/ListingHeader';
+import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
+import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
 
 export default function PropertyDetails() {
   const navigate = useNavigate();
 
-  const [propertyName, setPropertyName] = useState('');
-  const [propertyDescription, setPropertyDescription] = useState('');
-  const [propertySize, setPropertySize] = useState('');
+  const draft = getListingDraft();
+  const [propertyName, setPropertyName] = useState(draft.buildingName || '');
+  const [propertyDescription, setPropertyDescription] = useState(draft.description || '');
+  const [propertySize, setPropertySize] = useState(draft.propertySize || '');
+
+  const updateField = (field, setValue) => (event) => {
+    const value = event.target.value;
+    setValue(value);
+    updateListingDraft({ [field]: value });
+  };
 
   return (
     <div className="min-h-screen bg-white text-black font-sans flex flex-col">
@@ -33,7 +41,7 @@ export default function PropertyDetails() {
           <input
             type="text"
             value={propertyName}
-            onChange={(e) => setPropertyName(e.target.value)}
+            onChange={updateField('buildingName', setPropertyName)}
             placeholder="Property Name"
             className="w-full h-[52px] border border-black rounded-[19px] px-5 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50"
           />
@@ -45,7 +53,7 @@ export default function PropertyDetails() {
           <p className="text-[15px] font-medium mb-2">Property Description</p>
           <textarea
             value={propertyDescription}
-            onChange={(e) => setPropertyDescription(e.target.value)}
+            onChange={updateField('description', setPropertyDescription)}
             placeholder="Property Description"
             rows={7}
             className="w-full border border-black rounded-[19px] px-5 py-4 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50 resize-none mb-6"
@@ -55,7 +63,7 @@ export default function PropertyDetails() {
           <input
             type="text"
             value={propertySize}
-            onChange={(e) => setPropertySize(e.target.value)}
+            onChange={updateField('propertySize', setPropertySize)}
             placeholder="Property Size (optional)"
             className="w-full h-[52px] border border-black rounded-[19px] px-5 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50 mb-8"
           />

@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
-import ListingHeader from '../components/ListingHeader';
+import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
+import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
 
 export default function Location() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [country, setCountry] = useState('');
-  const [state, setState] = useState('');
-  const [city, setCity] = useState('');
-  const [street, setStreet] = useState('');
-  const [unit, setUnit] = useState('');
-  const [zip, setZip] = useState('');
+  const draft = getListingDraft();
+  const [search, setSearch] = useState(draft.search || '');
+  const [country, setCountry] = useState(draft.country || '');
+  const [state, setState] = useState(draft.state || '');
+  const [city, setCity] = useState(draft.city || '');
+  const [street, setStreet] = useState(draft.street || '');
+  const [unit, setUnit] = useState(draft.unit || '');
+  const [zip, setZip] = useState(draft.zip || '');
+
+  const updateField = (field, setValue) => (event) => {
+    const value = event.target.value;
+    setValue(value);
+    updateListingDraft({ [field]: value });
+  };
 
   const inputClass =
     'w-full h-[52px] border border-black rounded-full px-5 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50';
@@ -39,7 +47,7 @@ export default function Location() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={updateField('search', setSearch)}
               placeholder="Search for property or location"
               className="w-full h-[52px] border border-black rounded-full pl-11 pr-5 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50"
             />
@@ -63,7 +71,7 @@ export default function Location() {
             <input
               type="text"
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              onChange={updateField('country', setCountry)}
               placeholder="Country or Region"
               className={inputClass}
             />
@@ -72,14 +80,14 @@ export default function Location() {
               <input
                 type="text"
                 value={state}
-                onChange={(e) => setState(e.target.value)}
+                onChange={updateField('state', setState)}
                 placeholder="State/Province"
                 className={inputClass}
               />
               <input
                 type="text"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={updateField('city', setCity)}
                 placeholder="City"
                 className={inputClass}
               />
@@ -88,7 +96,7 @@ export default function Location() {
             <input
               type="text"
               value={street}
-              onChange={(e) => setStreet(e.target.value)}
+              onChange={updateField('street', setStreet)}
               placeholder="Street Address"
               className={inputClass}
             />
@@ -96,7 +104,7 @@ export default function Location() {
             <input
               type="text"
               value={unit}
-              onChange={(e) => setUnit(e.target.value)}
+              onChange={updateField('unit', setUnit)}
               placeholder="Building, Floor or Unit Number (Optional)"
               className={inputClass}
             />
@@ -104,7 +112,7 @@ export default function Location() {
             <input
               type="text"
               value={zip}
-              onChange={(e) => setZip(e.target.value)}
+              onChange={updateField('zip', setZip)}
               placeholder="ZIP/Postal Code (Optional)"
               className={inputClass}
             />

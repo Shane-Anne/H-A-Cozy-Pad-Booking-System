@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import ListingHeader from '../components/ListingHeader';
-import { useNavigate, useLocation } from 'react-router-dom';
+import ListingHeader from '../../components/ListingHeader';
+import { useNavigate } from 'react-router-dom';
+import { clearListingDraft, getListingDraft } from '../../lib/listingDraft';
+import { API_BASE_URL } from '../../lib/api';
 
 function ImagePlaceholderIcon() {
   return (
@@ -39,12 +41,57 @@ function PinIcon() {
 
 export default function Publish() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const propertyName = location.state?.propertyName || 'Property Name';
-  const propertyPlace = location.state?.propertyPlace || 'Property Place';
+  const draft = getListingDraft();
+  const propertyName = draft.buildingName || 'Property Name';
+  const propertyPlace = [draft.city, draft.country].filter(Boolean).join(', ') || 'Property Place';
 
   const [agreed, setAgreed] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [error, setError] = useState('');
+
+  const publishListing = async () => {
+    setIsPublishing(true);
+    setError('');
+
+    const location = [
+      draft.street,
+      draft.city,
+      draft.state,
+      draft.country,
+      draft.zip,
+    ].filter(Boolean).join(', ');
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/create_listing.php`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            buildingName: draft.buildingName,
+            location,
+            unitName: 'Entire place',
+            description: draft.description,
+            maxGuests: draft.maxGuests,
+            ratePerNight: draft.ratePerNight,
+            amenities: draft.amenities || [],
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Unable to publish listing');
+      }
+
+      clearListingDraft();
+      navigate('/host/listings');
+    } catch (publishError) {
+      setError(publishError.message);
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-black font-sans flex flex-col">
@@ -118,6 +165,7 @@ export default function Publish() {
               compliance with all relevant local laws and regulations
             </span>
           </label>
+          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
         </div>
 
         {/* Bottom buttons */}
@@ -143,8 +191,8 @@ export default function Publish() {
           {/* Publish */}
           <button
             type="button"
-            disabled={!agreed}
-            onClick={() => navigate('/host/listings')}
+            disabled={!agreed || isPublishing}
+            onClick={publishListing}
             className={`
               w-[142px] h-[50px]
               rounded-full
@@ -152,13 +200,13 @@ export default function Publish() {
               text-[20px]
               transition
               ${
-                agreed
+                agreed && !isPublishing
                   ? 'border-neutral-400 bg-neutral-300 text-black hover:bg-neutral-400 cursor-pointer'
                   : 'border-neutral-300 bg-neutral-100 text-neutral-400 cursor-not-allowed'
               }
             `}
-          >
-            Publish
+            >
+            {isPublishing ? 'Publishing...' : 'Publish'}
           </button>
         </div>
       </main>
