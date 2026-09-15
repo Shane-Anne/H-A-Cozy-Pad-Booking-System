@@ -11,6 +11,10 @@ import HelpCenter from './pages/HelpCenter';
 import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
 
+import UnitListing from './pages/UnitListing';
+import PropertyDescription from './pages/PropertyDescription';
+import PlaceDescription from './pages/PlaceDescription';
+
 // Home page wrapper containing the main landing sections
 function HomePage({ onOpenSignIn, onOpenRegister, isMenuOpen, setIsMenuOpen }) {
   return (
@@ -73,6 +77,19 @@ export default function App() {
         />
         <Route path="/host/listings" element={<DashboardListings />} />
         <Route path="/host/reservations" element={<DashboardReservations />} />
+
+        <Route path="/host/listing" element={<UnitListing />} />
+
+        <Route
+            path="/host/listing/PropertyDescription"
+            element={<PropertyDescription />}
+        />
+
+        <Route
+            path="/host/listing/PlaceDescription"
+            element={<PlaceDescription />}
+        />
+        
       </Routes>
 
       {/* Global Modals */}
