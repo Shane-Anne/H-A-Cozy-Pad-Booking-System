@@ -7,7 +7,7 @@ export default function DashboardListings() {
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost/H-A-Cozy-Pad-Booking-System/api/listings.php', {
+    fetch('http://localhost/api/listings.php', {
       credentials: 'include'
     })
       .then((response) => response.json())
