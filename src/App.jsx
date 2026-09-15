@@ -7,6 +7,7 @@ import PropertySection from './components/PropertySection';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import RegisterModal from './components/RegisterModal';
+import Chatbot from './components/Chatbot'; // 💬 Import Chatbot component
 
 import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
@@ -42,6 +43,7 @@ export default function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false); // 💬 State for floating chatbot
 
     const handleOpenAuth = () => {
         setIsRegisterModalOpen(false);
@@ -56,7 +58,6 @@ export default function App() {
     return (
         <Router>
             <Routes>
-
                 {/* Home */}
                 <Route
                     path="/"
@@ -79,6 +80,7 @@ export default function App() {
                             setIsMenuOpen={setIsMenuOpen}
                             onOpenSignIn={handleOpenAuth}
                             onOpenRegister={handleOpenRegister}
+                            onOpenChat={() => setIsChatOpen(true)} // 💬 Pass trigger to HelpCenter
                         />
                     }
                 />
@@ -93,7 +95,6 @@ export default function App() {
                     path="/host/reservations"
                     element={<DashboardReservations />}
                 />
-
             </Routes>
 
             {/* Global Modals */}
@@ -108,6 +109,12 @@ export default function App() {
                 onClose={() => setIsRegisterModalOpen(false)}
             />
 
+            {/* 💬 Global Floating Chatbot Bubble */}
+            <Chatbot
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+                onToggle={() => setIsChatOpen(!isChatOpen)}
+            />
         </Router>
     );
 }
