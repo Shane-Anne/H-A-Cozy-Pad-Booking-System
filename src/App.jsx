@@ -88,8 +88,7 @@ function HelpCenter({
             <main className="flex-1">
                 <section className="pt-4 pb-2 text-center">
                     <h1 className="text-2xl font-bold mb-3">Hello, how can we help you?</h1>
-                    <div className="mx-auto w-[198px] h-[41px] rounded-full border border-gray-500 bg-gray-100 flex 
-                                    items-center justify-between px-4">
+                    <div className="mx-auto w-[198px] h-[41px] rounded-full border border-gray-500 bg-gray-100 flex items-center justify-between px-4">
                         <span className="text-[10px] text-gray-700">Search</span>
                         <button type="button" 
                                 className="w-6 h-6 rounded-full border border-gray-400 bg-white flex items-center justify-center" 
@@ -103,7 +102,6 @@ function HelpCenter({
                     </div>
                 </section>
 
-                /* HERE NEXT */
                 <section>
                     
                 </section>
