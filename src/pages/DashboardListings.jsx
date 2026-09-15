@@ -145,7 +145,9 @@ export default function DashboardListings() {
                   <td className="py-4 text-base align-middle">
                     <span className="inline-flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      {listing.status}
+                      {listing.status
+                        ? listing.status.charAt(0).toUpperCase() + listing.status.slice(1)
+                        : ''}
                     </span>
                   </td>
                 </tr>
