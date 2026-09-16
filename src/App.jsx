@@ -96,51 +96,59 @@ export default function App() {
             />
           }
         />
-        <Route path="/host/listings" element={<DashboardListings />} />
-        <Route path="/host/reservations" element={<DashboardReservations />} />
+        <Route 
+          path="/host/listings" 
+          element={<DashboardListings />} 
+        />
 
-        <Route path="/host/listing" element={<UnitListing />} />
+        <Route 
+          path="/host/reservations" 
+          element={<DashboardReservations />} 
+        />
 
-        <Route
-            path="/host/listing/PropertyDescription"
-            element={<PropertyDescription />}
+        <Route 
+          path="/host/listing" element={<UnitListing />} 
         />
 
         <Route
-            path="/host/listing/PlaceDescription"
-            element={<PlaceDescription />}
+          path="/host/listing/PropertyDescription"
+          element={<PropertyDescription />}
         />
 
         <Route
-            path="/host/listing/PlaceOffer"
-            element={<PlaceOffer />}
+          path="/host/listing/PlaceDescription"
+          element={<PlaceDescription />}
         />
 
         <Route
-            path="/host/listing/PlaceLocation"
-            element={<PlaceLocation />}
+          path="/host/listing/PlaceOffer"
+          element={<PlaceOffer />}
         />
 
         <Route
-            path="/host/listing/PlaceRate"
-            element={<PlaceRate />}
+          path="/host/listing/PlaceLocation"
+          element={<PlaceLocation />}
         />
 
         <Route
-            path="/host/listing/PlaceDiscount"
-            element={<PlaceDiscount />}
+          path="/host/listing/PlaceRate"
+          element={<PlaceRate />}
         />
 
         <Route
-            path="/host/listing/PlaceDetail"
-            element={<PlaceDetail />}
+          path="/host/listing/PlaceDiscount"
+          element={<PlaceDiscount />}
         />
 
         <Route
-            path="/host/listing/ListingPublish" 
-            element={<ListingPublish />}
+          path="/host/listing/PlaceDetail"
+          element={<PlaceDetail />}
         />
-        
+
+        <Route
+          path="/host/listing/ListingPublish" 
+          element={<ListingPublish />}
+        />
       </Routes>
 
       {/* Global Modals */}
