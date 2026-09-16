@@ -10,6 +10,7 @@ import RegisterModal from './components/RegisterModal';
 import HelpCenter from './pages/HelpCenter';
 import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
+import BookingConfirmation from './pages/Bookingconfirmation';
 
 // Home page wrapper containing the main landing sections
 function HomePage({ onOpenSignIn, onOpenRegister, isMenuOpen, setIsMenuOpen }) {
@@ -73,6 +74,7 @@ export default function App() {
         />
         <Route path="/host/listings" element={<DashboardListings />} />
         <Route path="/host/reservations" element={<DashboardReservations />} />
+        <Route path="/booking/confirmation" element={<BookingConfirmation />} />
       </Routes>
 
       {/* Global Modals */}

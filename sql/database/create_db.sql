@@ -5,7 +5,7 @@ create table IF NOT EXISTS users(
     user_id int auto_increment primary key,
     full_name varchar(50) not null,
     email varchar(50) not null, 
-    password varchar(50) not null,
+    password varchar(250) not null,
     role enum('admin', 'assistant', 'customer') not null default 'customer',
     contact_num varchar(11) not null,
     created_at timestamp default current_timestamp,
@@ -91,7 +91,7 @@ create table IF NOT EXISTS booking_details(
         on delete cascade
 );
 
-create table chatbot_logs(
+create table NOT EXISTS chatbot_logs(
     chatbot_log_id int auto_increment primary key,
     user_id int null,
     question text not null,
@@ -103,13 +103,13 @@ create table chatbot_logs(
         on delete set null
 );
 
-create table faqs_categories(
+create table NOT EXISTS faqs_categories(
     category_id int auto_increment primary key,
     category_name varchar(50) not null unique,
     created_at timestamp default current_timestamp
 );
 
-create table faqs(
+create table NOT EXISTS faqs(
     faq_id int auto_increment primary key,
     category_id int not null,
     question text not null,
@@ -121,7 +121,7 @@ create table faqs(
         on delete cascade
 );
 
-create table notifications(
+create table NOT EXISTS notifications(
     notification_id int auto_increment primary key,
     user_id int not null,
     booking_id int null,
@@ -140,7 +140,7 @@ create table notifications(
         on delete set null
 );
 
-create table payments(
+create table NOT EXISTS payments(
     payment_id int auto_increment primary key,
     booking_id int not null,
     amount decimal(10, 2) not null,
@@ -160,12 +160,12 @@ create table payments(
         on delete set null
 );
 
-create table unit_amenities(
+create table NOT EXISTS unit_amenities(
     amenity_id int auto_increment primary key,
     amenity_name varchar(100) not null unique
 );
 
-create table unit_amenity(
+create table NOT EXISTS unit_amenity(
     unit_id int not null,
     amenity_id int not null,
     primary key(unit_id, amenity_id),
