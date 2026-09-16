@@ -1,10 +1,17 @@
 <?php
     require 'config.php';
     
-    header("Access-Control-Allow-Origin: $FRONTEND_ORIGIN");
+    $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    $isLocalFrontend = preg_match(
+        '/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/',
+        $requestOrigin
+    );
+
+    header('Access-Control-Allow-Origin: ' . ($isLocalFrontend ? $requestOrigin : $FRONTEND_ORIGIN));
     header('Access-Control-Allow-Credentials: true');
     header('Access-Control-Allow-Headers: Content-Type');
     header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Vary: Origin');
     header('Content-Type: application/json');
     
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
