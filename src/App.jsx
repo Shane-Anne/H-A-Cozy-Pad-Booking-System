@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Header from './components/Header';
@@ -10,7 +10,11 @@ import RegisterModal from './components/RegisterModal';
 import HelpCenter from './pages/HelpCenter';
 import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
-import BookingConfirmation from './pages/Bookingconfirmation';
+import ListedProperty from './pages/ListedProperty'; //added by sel
+
+//booking confirmation --fix added sel
+import BookingConfirmation from './pages/booking_page/Bookingconfirmation';
+import BookingConfirmation2 from './pages/booking_page/Bookingconfirmation_2';
 
 //listing pages
 import PlaceOffer from './pages/listing_page/PlaceOffer';
@@ -105,6 +109,29 @@ export default function App() {
         <Route 
           path="/host/reservations" 
           element={<DashboardReservations />} 
+        />
+        
+        {/* Added by sel routing para sa reserve button sa ListedProperty*/}
+        <Route
+          path="/booking-confirmation"
+          element={<BookingConfirmation />}
+        />
+        <Route
+          path="/booking-confirmation-2"
+          element={<BookingConfirmation2 />}
+        />
+
+        {/* Added by sel para sa listed property */}
+        <Route
+          path="/property/:unitId"
+          element={
+            <ListedProperty
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onOpenSignIn={handleOpenAuth}
+              onOpenRegister={handleOpenRegister}
+            />
+          }
         />
 
         <Route 

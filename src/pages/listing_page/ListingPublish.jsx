@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
 import { clearListingDraft, getListingDraft } from '../../lib/listingDraft';
@@ -71,6 +71,8 @@ export default function Publish() {
           body: JSON.stringify({
             buildingName: draft.buildingName,
             location,
+            latitude: draft.latitude ?? null,
+            longitude: draft.longitude ?? null,
             unitName: 'Entire place',
             description: draft.description,
             maxGuests: draft.maxGuests,

@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../lib/api';
 
 export default function Header({
   isMenuOpen,
@@ -9,6 +10,21 @@ export default function Header({
 }) {
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/session_check.php`, { credentials: 'include' })
+      .then((response) => response.json())
+      .then((data) => setIsLoggedIn(Boolean(data.loggedIn)))
+      .catch(() => setIsLoggedIn(false));
+
+    const handleAuthChange = (event) => {
+      setIsLoggedIn(Boolean(event.detail?.loggedIn));
+    };
+
+    window.addEventListener('auth-changed', handleAuthChange);
+    return () => window.removeEventListener('auth-changed', handleAuthChange);
+  }, []);
 
   // Replaces menu.js document click listener to close menu outside clicks
   useEffect(() => {
@@ -28,32 +44,36 @@ export default function Header({
   }, [isMenuOpen, setIsMenuOpen]);
 
   return (
-    <header className="flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
-      <a href="#" className="text-3xl lg:text-4xl font-bold text-black no-underline">
+    <header className="relative flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
+      <a href="../" className="text-3xl lg:text-4xl font-bold text-black no-underline">
         H&A Cozy Pad
       </a>
-      
-      <nav className="hidden md:block">
+
+      <nav className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <ul className="flex gap-8 list-none m-0 p-0">
-          <li><a href="#" className="text-xl hover:underline">All</a></li>
+          <li><a href="../" className="text-xl hover:underline">All</a></li>
           <li><a href="#" className="text-xl hover:underline">Homes</a></li>
           <li><a href="#" className="text-xl hover:underline">Reservations</a></li>
         </ul>
       </nav>
 
       <div className="flex items-center gap-3">
-        <button
-          onClick={onOpenRegister}
-          className="hidden md:block px-6 py-2.5 text-lg border border-black rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer"
-        >
-          Register
-        </button>
-        <button
-          onClick={onOpenSignIn}
-          className="hidden md:block px-6 py-2.5 text-lg border border-black rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer"
-        >
-          Sign in
-        </button>
+        {!isLoggedIn && (
+          <>
+            <button
+              onClick={onOpenRegister}
+              className="hidden md:block px-6 py-2.5 text-lg border border-black rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer"
+            >
+              Register
+            </button>
+            <button
+              onClick={onOpenSignIn}
+              className="hidden md:block px-6 py-2.5 text-lg border border-black rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer"
+            >
+              Sign in
+            </button>
+          </>
+        )}
         <button
           ref={buttonRef}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -71,10 +91,14 @@ export default function Header({
           ref={menuRef}
           className="absolute right-[30px] top-[90px] w-[280px] bg-white rounded-2xl shadow-xl border border-neutral-100 py-3 z-40"
         >
-          <Link to="/host/listings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/></svg>
-            Switch to hosting
-          </Link>
+          {isLoggedIn && (
+            <>
+              <Link to="/host/listings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/></svg>
+                Switch to hosting
+              </Link>
+            </>
+          )}
           <a href="#" className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 16.5l20-9-6 18-3-7-7-3z"/></svg>
             Trips
@@ -89,16 +113,33 @@ export default function Header({
             Help Center
           </Link>
           <hr className="my-2 border-neutral-200" />
-          <button
-            onClick={() => {
-              setIsMenuOpen(false);
-              onOpenSignIn();
-            }}
-            className="w-full text-left flex items-center gap-3 px-5 py-3 text-base font-semibold hover:bg-neutral-100 bg-transparent border-0 cursor-pointer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-            Log in or sign up
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={async () => {
+                await fetch(`${API_BASE_URL}/logout.php`, {
+                  method: 'POST',
+                  credentials: 'include',
+                });
+                setIsLoggedIn(false);
+                setIsMenuOpen(false);
+              }}
+              className="w-full text-left flex items-center gap-3 px-5 py-3 text-base font-semibold hover:bg-neutral-100 bg-transparent border-0 cursor-pointer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              Log out
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                onOpenSignIn();
+              }}
+              className="w-full text-left flex items-center gap-3 px-5 py-3 text-base font-semibold hover:bg-neutral-100 bg-transparent border-0 cursor-pointer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              Log in or sign up
+            </button>
+          )}
         </div>
       )}
     </header>

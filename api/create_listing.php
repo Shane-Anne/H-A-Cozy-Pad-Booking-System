@@ -5,6 +5,8 @@ $data = json_decode(file_get_contents('php://input'), true);
 
 $buildingName = trim($data['buildingName'] ?? '');
 $location = trim($data['location'] ?? '');
+$latitude = $data['latitude'] ?? null; //sel
+$longitude = $data['longitude'] ?? null; //sel
 $unitName = trim($data['unitName'] ?? 'Entire place');
 $description = trim($data['description'] ?? '');
 $maxGuests = (int) ($data['maxGuests'] ?? 0);
@@ -22,14 +24,33 @@ if (!is_array($amenities)) {
     echo json_encode(['error' => 'Invalid amenities']);
     exit;
 }
+//latitude nag add for saving sa listing - sel
+if ($latitude !== null && (!is_numeric($latitude) || $latitude < -90 || $latitude > 90)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid latitude']);
+    exit;
+}
+//longitude nag add for saving sa listing - sel
+if ($longitude !== null && (!is_numeric($longitude) || $longitude < -180 || $longitude > 180)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid longitude']);
+    exit;
+}
+//longitude at latitude error handling nag add for saving sa listing - sel
+if (($latitude === null) !== ($longitude === null)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Both latitude and longitude are required']);
+    exit;
+}
 
+//nag add here sa try ng sa location --sel
 try {
     $pdo->beginTransaction();
 
     $building = $pdo->prepare(
-        'INSERT INTO buildings (building_name, location) VALUES (?, ?)'
+        'INSERT INTO buildings (building_name, location, latitude, longitude) VALUES (?, ?, ?, ?)'
     );
-    $building->execute([$buildingName, $location]);
+    $building->execute([$buildingName, $location, $latitude, $longitude]); 
     $buildingId = $pdo->lastInsertId();
 
     $unit = $pdo->prepare(

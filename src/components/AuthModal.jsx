@@ -42,9 +42,10 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
         setError(data.error || 'Something went wrong. Please try again.');
         return;
       }
-
-      // data.user now has { id, firstName, lastName, email }
-      console.log('Logged in:', data.user);
+      //added data.user --sel for state in header when logged-in
+      window.dispatchEvent(new CustomEvent('auth-changed', {
+        detail: { loggedIn: true, user: data.user },
+      }));
       onClose();
     } catch (err) {
       setError('Could not reach the server. Is XAMPP running?');
