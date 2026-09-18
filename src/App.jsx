@@ -12,6 +12,8 @@ import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
 import BookingConfirmation from './pages/Bookingconfirmation';
 
+import Chatbot from './components/Chatbot';
+
 //listing pages
 import PlaceOffer from './pages/listing_page/PlaceOffer';
 import UnitListing from './pages/listing_page/UnitListing';
@@ -61,6 +63,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const handleOpenAuth = () => {
     setIsRegisterModalOpen(false);
@@ -94,8 +97,9 @@ export default function App() {
               setIsMenuOpen={setIsMenuOpen}
               onOpenSignIn={handleOpenAuth}
               onOpenRegister={handleOpenRegister}
+              onOpenChat={() => setIsChatOpen(true)}
             />
-          }
+          }   
         />
         <Route 
           path="/host/listings" 
@@ -161,6 +165,12 @@ export default function App() {
       <RegisterModal
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
+      />
+
+      <Chatbot
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        onToggle={() => setIsChatOpen(!isChatOpen)}
       />
     </Router>
   );

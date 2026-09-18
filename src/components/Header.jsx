@@ -37,7 +37,7 @@ export default function Header({
         <ul className="flex gap-8 list-none m-0 p-0">
           <li><a href="#" className="text-xl hover:underline">All</a></li>
           <li><a href="#" className="text-xl hover:underline">Homes</a></li>
-          <li><a href="#" className="text-xl hover:underline">Reservations</a></li>
+          <li><a href="/host/reservations" className="text-xl hover:underline">Reservations</a></li>
         </ul>
       </nav>
 
