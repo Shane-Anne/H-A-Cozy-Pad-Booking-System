@@ -81,6 +81,20 @@ export default function DashboardListings() {
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </button>
+
+            <button
+              type="button"
+              disabled={!selectedBuildingId}
+              onClick={() => {
+                if (window.confirm('Edit this listing?')) {
+                  navigate(`/host/listing?edit=${selectedBuildingId}`);
+                }
+              }}
+              className="px-6 py-2.5 text-base font-medium border border-neutral-300 rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Edit
+            </button>
+
             <button 
               onClick={() => navigate('/host/listing')}
               className="px-6 py-2.5 text-base font-medium border border-neutral-300 rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer">
