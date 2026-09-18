@@ -5,6 +5,7 @@ import { API_BASE_URL } from './lib/api';
 import AuthModal from './components/AuthModal';
 import RegisterModal from './components/RegisterModal';
 import HelpCenter from './pages/HelpCenter';
+import Profile from './pages/Profile';
 import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
 import ListedProperty from './pages/ListedProperty';
@@ -81,6 +82,8 @@ export default function App() {
             <HomePage
               isMenuOpen={isMenuOpen}
               setIsMenuOpen={setIsMenuOpen}
+              user={user}
+              onLogout={() => setUser(null)}
               onOpenSignIn={handleOpenAuth}
               onOpenRegister={handleOpenRegister}
             />
@@ -97,6 +100,10 @@ export default function App() {
             />
           }
         />
+
+        <Route element={<ProtectedRoute user={user} isLoading={isLoading} />}>
+          <Route path="/profile" element={<Profile user={user} />} />
+        </Route>
       
     
         <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['admin', 'assistant']} />}>
@@ -120,6 +127,8 @@ export default function App() {
               <HelpCenter
                 isMenuOpen={isMenuOpen}
                 setIsMenuOpen={setIsMenuOpen}
+                user={user}
+                onLogout={() => setUser(null)}
                 onOpenSignIn={handleOpenAuth}
                 onOpenRegister={handleOpenRegister}
                 onOpenChat={() => setIsChatOpen(true)}

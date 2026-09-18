@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../lib/api';
 
 export default function RegisterModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -42,7 +43,7 @@ export default function RegisterModal({ isOpen, onClose }) {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/register.php`, {
+      const res = await fetch(`${API_BASE_URL}/register.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -53,7 +54,17 @@ export default function RegisterModal({ isOpen, onClose }) {
           password: formData.password,
         }),
       });
-      const data = await res.json();
+      const responseText = await res.text();
+      let data = {};
+
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        if (res.ok) {
+          onClose();
+          return;
+        }
+      }
 
       if (!res.ok) {
         setError(data.error || 'Something went wrong. Please try again.');
@@ -62,7 +73,7 @@ export default function RegisterModal({ isOpen, onClose }) {
 
       console.log('Registered:', data.user);
       onClose();
-    } catch (err) {
+    } catch {
       setError('Could not reach the server. Is XAMPP running?');
     } finally {
       setIsSubmitting(false);

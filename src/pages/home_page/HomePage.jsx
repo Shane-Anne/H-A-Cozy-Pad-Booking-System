@@ -5,7 +5,14 @@ import PropertySection from './PropertySection';
 import Footer from '../../components/Footer';
 import { API_BASE_URL } from '../../lib/api';
 
-export default function HomePage({ onOpenSignIn, onOpenRegister, isMenuOpen, setIsMenuOpen }) {
+export default function HomePage({
+  onOpenSignIn,
+  onOpenRegister,
+  isMenuOpen,
+  setIsMenuOpen,
+  user,
+  onLogout,
+}) {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
 
@@ -49,6 +56,8 @@ export default function HomePage({ onOpenSignIn, onOpenRegister, isMenuOpen, set
       <Header
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
+        user={user}
+        onLogout={onLogout}
         onOpenSignIn={onOpenSignIn}
         onOpenRegister={onOpenRegister}
       />
