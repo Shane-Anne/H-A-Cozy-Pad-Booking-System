@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function PropertySection({ title, properties = [] }) {
   return (
@@ -30,22 +31,28 @@ export default function PropertySection({ title, properties = [] }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
           {properties.map((property) => (
-            <div key={property.unit_id}>
-              <div className="w-full aspect-square bg-neutral-300 rounded-[20px]"></div>
-              <div className="mt-3">
-                <h3 className="text-xl lg:text-2xl font-normal">
-                  {property.building_name}
-                </h3>
-                <p className="text-base text-neutral-500">
-                  {property.location}
-                </p>
-                <p className="text-lg lg:text-xl font-light">
-                  ₱ {Number(property.rate_per_night).toLocaleString('en-PH', {
-                    minimumFractionDigits: 2,
-                  })} / night
-                </p>
+            <Link
+              key={property.unit_id}
+              to={`/property/${property.unit_id}`}
+              className="block no-underline text-black hover:text-black"
+            >
+              <div>
+                <div className="w-full aspect-square bg-neutral-300 rounded-[20px]"></div>
+                <div className="mt-3">
+                  <h3 className="text-xl lg:text-2xl font-normal">
+                    {property.building_name}
+                  </h3>
+                  <p className="text-base text-neutral-500">
+                    {property.location}
+                  </p>
+                  <p className="text-lg lg:text-xl font-light">
+                    ₱ {Number(property.rate_per_night).toLocaleString('en-PH', {
+                      minimumFractionDigits: 2,
+                    })} / night
+                  </p>
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
