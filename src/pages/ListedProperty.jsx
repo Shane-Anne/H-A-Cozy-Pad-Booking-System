@@ -70,6 +70,8 @@ export default function PropertyDetail({
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState(1);
+  const [isDateRangeAvailable, setIsDateRangeAvailable] = useState(null);
+  const [availabilityError, setAvailabilityError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -114,8 +116,33 @@ export default function PropertyDetail({
     ? (propertyAmenities.length ? propertyAmenities : PLACEHOLDER_AMENITIES)
     : (propertyAmenities.length ? propertyAmenities.slice(0, 8) : PLACEHOLDER_AMENITIES.slice(0, 8));
 
+  useEffect(() => {
+    if (!unit || !checkIn || !checkOut || checkOut <= checkIn) {
+      setIsDateRangeAvailable(null);
+      setAvailabilityError('');
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setAvailabilityError('');
+    fetch(`${API_BASE_URL}/check_availability.php?unit_id=${encodeURIComponent(unit.unit_id)}&check_in=${encodeURIComponent(checkIn)}&check_out=${encodeURIComponent(checkOut)}`, { signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Unable to check availability');
+        setIsDateRangeAvailable(Boolean(data.available));
+      })
+      .catch((availabilityRequestError) => {
+        if (availabilityRequestError.name !== 'AbortError') {
+          setIsDateRangeAvailable(null);
+          setAvailabilityError(availabilityRequestError.message);
+        }
+      });
+
+    return () => controller.abort();
+  }, [unit, checkIn, checkOut]);
+
   const handleReserve = () => {
-    if (!unit) return;
+    if (!unit || isDateRangeAvailable !== true) return;
 
     navigate('/booking-confirmation', {
       state: {
@@ -254,11 +281,15 @@ export default function PropertyDetail({
                 <button
                   type="button"
                   onClick={handleReserve}
-                  disabled={unit.status !== 'available'}
+                  disabled={unit.status !== 'available' || isDateRangeAvailable !== true}
                   className="w-full py-3 rounded-full bg-black text-white font-medium disabled:bg-neutral-300 disabled:cursor-not-allowed hover:bg-neutral-800 cursor-pointer"
                 >
-                  {unit.status === 'available' ? 'Reserve' : 'Unavailable'}
+                  {unit.status !== 'available' ? 'Unavailable' : isDateRangeAvailable === false ? 'Dates unavailable' : 'Reserve'}
                 </button>
+                {availabilityError && <p className="mt-2 text-xs text-red-600">{availabilityError}</p>}
+                {!availabilityError && checkIn && checkOut && checkOut > checkIn && isDateRangeAvailable === false && (
+                  <p className="mt-2 text-xs text-red-600">This room is already booked for the selected dates.</p>
+                )}
               </div>
             </div>
 

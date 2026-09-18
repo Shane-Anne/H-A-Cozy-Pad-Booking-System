@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer_Lite";
+import { API_BASE_URL } from "../../lib/api";
 
 function ImagePlaceholderIcon() {
   return (
@@ -80,34 +81,70 @@ function WalletIcon() {
 export default function BookingConfirmation({
   isMenuOpen,
   setIsMenuOpen,
+  user,
+  onLogout,
   onOpenSignIn,
   onOpenRegister,
 }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const booking = location.state || {};
   const property = booking.property || {};
-  const checkIn = booking.checkIn || "";
-  const checkOut = booking.checkOut || "";
+  const [checkIn, setCheckIn] = useState(booking.checkIn || "");
+  const [checkOut, setCheckOut] = useState(booking.checkOut || "");
   const guestCount = Number(booking.guests || 1);
 
   const [guests, setGuests] = useState(guestCount);
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [isAvailable, setIsAvailable] = useState(null);
+  const [availabilityError, setAvailabilityError] = useState("");
 
   const nightRate = Number(property.rate_per_night || 0);
   const nights = checkIn && checkOut ? Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000)) : 1;
   const total = nightRate * nights;
+
+  useEffect(() => {
+    if (!property.unit_id || !checkIn || !checkOut || checkOut <= checkIn) {
+      setIsAvailable(null);
+      setAvailabilityError("");
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setIsAvailable(null);
+    setAvailabilityError("");
+    fetch(`${API_BASE_URL}/check_availability.php?unit_id=${encodeURIComponent(property.unit_id)}&check_in=${encodeURIComponent(checkIn)}&check_out=${encodeURIComponent(checkOut)}`, { signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Unable to check room availability");
+        setIsAvailable(Boolean(data.available));
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setIsAvailable(null);
+          setAvailabilityError(error.message);
+        }
+      });
+
+    return () => controller.abort();
+  }, [property.unit_id, checkIn, checkOut]);
 
   return (
     <div className="bg-white text-black font-sans min-h-screen flex flex-col">
       <Header
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
+        user={user}
+        onLogout={onLogout}
         onOpenSignIn={onOpenSignIn}
         onOpenRegister={onOpenRegister}
       />
 
       <main className="grow px-5 md:px-10 lg:px-[52px] py-10">
         <div className="max-w-[1200px] mx-auto">
+          <button type="button" onClick={() => navigate(-1)} className="mb-6 text-sm underline">
+            Back
+          </button>
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
             Booking Confirmation
           </h2>
@@ -134,9 +171,19 @@ export default function BookingConfirmation({
                 <div>
                   <p className="text-[11px] text-gray-500 mb-1">Date</p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <DatePill label={checkIn ? new Date(checkIn).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Select date"} sub={checkIn ? new Date(checkIn).toLocaleDateString("en-US", { weekday: "long" }) : "Check-in"} />
+                    <DatePill
+                      label="Check-in"
+                      value={checkIn}
+                      onChange={setCheckIn}
+                      max={checkOut || undefined}
+                    />
                     <span className="text-gray-300">–</span>
-                    <DatePill label={checkOut ? new Date(checkOut).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Select date"} sub={checkOut ? new Date(checkOut).toLocaleDateString("en-US", { weekday: "long" }) : "Check-out"} />
+                    <DatePill
+                      label="Check-out"
+                      value={checkOut}
+                      onChange={setCheckOut}
+                      min={checkIn || undefined}
+                    />
                   </div>
                 </div>
 
@@ -269,9 +316,18 @@ export default function BookingConfirmation({
               <p className="text-[11px] text-center text-gray-500">
                 By selecting the button, I agree to the booking terms.
               </p>
-              <Link to="/booking-confirmation-2" className="block w-full bg-gray-900 text-white text-sm font-medium text-center rounded-full py-3 hover:bg-gray-800 transition-colors cursor-pointer">
+              <button
+                type="button"
+                onClick={() => navigate('/booking-confirmation-2', { state: { ...booking, checkIn, checkOut, guests } })}
+                disabled={!checkIn || !checkOut || checkOut <= checkIn || isAvailable !== true}
+                className="block w-full bg-gray-900 text-white text-sm font-medium text-center rounded-full py-3 hover:bg-gray-800 transition-colors cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
                 Confirm & Pay
-              </Link>
+              </button>
+              {availabilityError && <p className="text-xs text-red-600">{availabilityError}</p>}
+              {!availabilityError && isAvailable === false && (
+                <p className="text-xs text-red-600">This room is already booked for the selected dates.</p>
+              )}
             </section>
           </div>
         </div>
@@ -282,19 +338,25 @@ export default function BookingConfirmation({
   );
 }
 
-function DatePill({ label, sub }) {
+function DatePill({ label, value, onChange, min, max }) {
   return (
-    <button
-      type="button"
-      className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-2 py-1.5 hover:border-gray-300"
+    <label
+      className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-2 py-1.5 hover:border-gray-300 cursor-pointer"
     >
       <CalendarIcon />
-      <div className="leading-tight text-left">
-        <p className="text-[11px] text-gray-800">{label}</p>
-        <p className="text-[10px] text-gray-400">{sub}</p>
-      </div>
-      <ChevronDownIcon className="w-3.5 h-3.5 text-gray-300 ml-0.5" />
-    </button>
+      <span className="flex flex-col leading-tight">
+        <span className="text-[10px] text-gray-400">{label}</span>
+        <input
+          type="date"
+          value={value}
+          min={min}
+          max={max}
+          onChange={(event) => onChange(event.target.value)}
+          className="bg-transparent text-[11px] text-gray-800 outline-none"
+          aria-label={label}
+        />
+      </span>
+    </label>
   );
 }
 

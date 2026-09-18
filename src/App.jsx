@@ -6,11 +6,15 @@ import AuthModal from './components/AuthModal';
 import RegisterModal from './components/RegisterModal';
 import HelpCenter from './pages/HelpCenter';
 import Profile from './pages/Profile';
-import DashboardListings from './pages/DashboardListings';
-import DashboardReservations from './pages/DashboardReservations';
+import Trips from './pages/Trips';
+
 import ListedProperty from './pages/ListedProperty';
 import ProtectedRoute from './components/ProtectedRoute';
 
+//dashboard pages
+import DashboardListings from './pages/dashboard_page/DashboardListings';
+import DashboardReservations from './pages/dashboard_page/DashboardReservations';
+import DashboardCalendar from './pages/dashboard_page/DashboardCalendar';
 // home page
 import HomePage from './pages/home_page/HomePage';
 
@@ -109,6 +113,7 @@ export default function App() {
         <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['admin', 'assistant']} />}>
           <Route path="/host/listings" element={<DashboardListings />} />
           <Route path="/host/reservations" element={<DashboardReservations />} /> 
+          <Route path="/host/calendar" element={<DashboardCalendar />} />
           <Route path="/host/listing" element={<UnitListing />} />
           <Route path="/host/listing/PropertyDescription" element={<PropertyDescription />} />
           <Route path="/host/listing/PlaceDescription" element={<PlaceDescription />} />
@@ -135,8 +140,33 @@ export default function App() {
               />
             }   
           />
-          <Route path="/booking-confirmation" element={<BookingConfirmation />} />
-          <Route path="/booking-confirmation-2" element={<BookingConfirmation2 />} />
+          <Route path="/trips" element={<Trips />} />
+          <Route
+              path="/booking-confirmation"
+              element={
+                <BookingConfirmation
+                  user={user}
+                  onLogout={() => setUser(null)}
+                  isMenuOpen={isMenuOpen}
+                  setIsMenuOpen={setIsMenuOpen}
+                  onOpenSignIn={handleOpenAuth}
+                  onOpenRegister={handleOpenRegister}
+                />
+              }
+          />
+          <Route
+              path="/booking-confirmation-2"
+              element={
+                <BookingConfirmation2
+                  user={user}
+                  onLogout={() => setUser(null)}
+                  isMenuOpen={isMenuOpen}
+                  setIsMenuOpen={setIsMenuOpen}
+                  onOpenSignIn={handleOpenAuth}
+                  onOpenRegister={handleOpenRegister}
+                />
+              }
+          />
         </Route>
         
         

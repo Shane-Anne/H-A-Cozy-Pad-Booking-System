@@ -86,7 +86,7 @@ export default function Header({
               </Link>
             </>
           )}
-          <Link to="" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
+          <Link to="/trips" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 16.5l20-9-6 18-3-7-7-3z"/></svg>
             Trips
           </Link>

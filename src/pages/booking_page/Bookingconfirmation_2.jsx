@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer_Lite";
+import { API_BASE_URL } from "../../lib/api";
 
 function PlusIcon({ className = "w-6 h-6" }) {
   return (
@@ -59,9 +61,18 @@ const VEHICLE_TYPES = ["Car", "Motorcycle", "Van", "SUV", "Truck"];
 export default function AdditionalInformation({
   isMenuOpen,
   setIsMenuOpen,
+  user,
+  onLogout,
   onOpenSignIn,
   onOpenRegister,
 }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const booking = location.state || {};
+  const property = booking.property || {};
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedBookingId, setSavedBookingId] = useState(booking.bookingId || null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -91,18 +102,55 @@ export default function AdditionalInformation({
       <Header
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
+        user={user}
+        onLogout={onLogout}
         onOpenSignIn={onOpenSignIn}
         onOpenRegister={onOpenRegister}
       />
 
       <main className="grow px-5 md:px-10 lg:px-[52px] py-10">
         <div className="max-w-[640px] mx-auto">
+          <button type="button" onClick={() => navigate(-1)} className="mb-6 text-sm underline">
+            Back
+          </button>
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
             Additional Information
           </h2>
 
           <form
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (booking.bookingId) return;
+              setSubmitError("");
+              setIsSubmitting(true);
+
+              try {
+                const formData = new FormData();
+                formData.append("unitId", property.unit_id || "");
+                formData.append("checkIn", booking.checkIn || "");
+                formData.append("checkOut", booking.checkOut || "");
+                formData.append("guests", booking.guests || "1");
+                formData.append("guestName", `${firstName} ${lastName}`.trim());
+                formData.append("guestContactNum", phone);
+                formData.append("vehicleType", hasVehicle ? vehicles.map((vehicle) => `${vehicle.type} (${vehicle.count})`).join(", ") : "");
+                formData.append("specialRequests", specialRequest);
+                if (govId) formData.append("govId", govId);
+                if (proofOfPayment) formData.append("proofOfPayment", proofOfPayment);
+
+                const response = await fetch(`${API_BASE_URL}/create_booking.php`, {
+                  method: "POST",
+                  credentials: "include",
+                  body: formData,
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Unable to create booking");
+                setSavedBookingId(data.bookingId);
+              } catch (error) {
+                setSubmitError(error.message);
+              } finally {
+                setIsSubmitting(false);
+              }
+            }}
             className="space-y-8"
           >
             {/* 1. Full Name */}
@@ -261,15 +309,45 @@ export default function AdditionalInformation({
 
             <button
               type="submit"
+              disabled={isSubmitting || Boolean(savedBookingId)}
               className="w-full sm:w-auto sm:mx-auto sm:block bg-gray-900 text-white text-sm font-medium rounded-full px-10 py-3 hover:bg-gray-800 transition-colors cursor-pointer"
             >
-              Confirm & Pay
+              {savedBookingId ? "Booking saved" : isSubmitting ? "Saving booking..." : "Confirm & Pay"}
             </button>
+            {submitError && <p className="text-sm text-red-600 text-center">{submitError}</p>}
           </form>
         </div>
       </main>
 
       <Footer />
+
+      {savedBookingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5" role="dialog" aria-modal="true" aria-labelledby="booking-success-title">
+          <div className="w-full max-w-md rounded-2xl bg-white p-7 text-center shadow-2xl">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-700">
+              <CheckIcon />
+            </div>
+            <h2 id="booking-success-title" className="text-xl font-semibold text-gray-900">Booking confirmed</h2>
+            <p className="mt-2 text-sm text-gray-500">Your booking has been saved. What would you like to do next?</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="rounded-full border border-gray-900 px-5 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Browse home
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/trips", { state: { ...booking, bookingId: savedBookingId } })}
+                className="rounded-full bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800"
+              >
+                View trips
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
