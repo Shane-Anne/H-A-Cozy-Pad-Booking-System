@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../lib/api'
 
 export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
   const [identifier, setIdentifier] = useState('');
@@ -30,12 +31,13 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/login.php`, {
+      const res = await fetch(`${API_BASE_URL}/login.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // sends/receives the PHP session cookie
         body: JSON.stringify({ identifier, password }),
       });
+      
       const data = await res.json();
 
       if (!res.ok) {

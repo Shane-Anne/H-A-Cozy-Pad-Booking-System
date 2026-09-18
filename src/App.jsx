@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
+import { API_BASE_URL } from './lib/api';
 
 import AuthModal from './components/AuthModal';
 import RegisterModal from './components/RegisterModal';
@@ -8,6 +8,7 @@ import HelpCenter from './pages/HelpCenter';
 import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
 import ListedProperty from './pages/ListedProperty';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // home page
 import HomePage from './pages/home_page/HomePage';
@@ -30,6 +31,8 @@ import PlaceDetail from './pages/listing_page/PlaceDetail';
 import ListingPublish from './pages/listing_page/ListingPublish';
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -45,11 +48,35 @@ export default function App() {
     setIsRegisterModalOpen(true);
   };
 
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/check_auth.php`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => setUser(null))
+      .finally(() => setIsLoading(false));
+
+    const handleAuthChange = (event) => {
+      if (event.detail?.loggedIn && event.detail?.user) {
+        setUser(event.detail.user);
+      } else {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener('auth-changed', handleAuthChange);
+    return () => window.removeEventListener('auth-changed', handleAuthChange);
+  }, []);
+
   return (
     <Router>
       <Routes>
-        <Route
-          path="/"
+        <Route path="/" 
           element={
             <HomePage
               isMenuOpen={isMenuOpen}
@@ -59,25 +86,8 @@ export default function App() {
             />
           }
         />
-        <Route
-          path="/help"
-          element={
-            <HelpCenter
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              onOpenSignIn={handleOpenAuth}
-              onOpenRegister={handleOpenRegister}
-              onOpenChat={() => setIsChatOpen(true)}
-            />
-          }   
-        />
-        <Route path="/host/listings" element={<DashboardListings />} />
-        <Route path="/host/reservations" element={<DashboardReservations />} />
-        <Route path="/booking-confirmation" element={<BookingConfirmation />} />
-        <Route path="/booking-confirmation-2" element={<BookingConfirmation2 />} />
-
-        <Route
-          path="/property/:unitId"
+        
+        <Route path="/property/:unitId"
           element={
             <ListedProperty
               isMenuOpen={isMenuOpen}
@@ -87,22 +97,47 @@ export default function App() {
             />
           }
         />
+      
+    
+        <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['admin', 'assistant']} />}>
+          <Route path="/host/listings" element={<DashboardListings />} />
+          <Route path="/host/reservations" element={<DashboardReservations />} /> 
+          <Route path="/host/listing" element={<UnitListing />} />
+          <Route path="/host/listing/PropertyDescription" element={<PropertyDescription />} />
+          <Route path="/host/listing/PlaceDescription" element={<PlaceDescription />} />
+          <Route path="/host/listing/PlaceOffer" element={<PlaceOffer />} />
+          <Route path="/host/listing/PlaceLocation" element={<PlaceLocation />} />
+          <Route path="/host/listing/PlaceRate" element={<PlaceRate />} />
+          <Route path="/host/listing/PlaceDiscount" element={<PlaceDiscount />} />
+          <Route path="/host/listing/PlaceDetail" element={<PlaceDetail />} />
+          <Route path="/host/listing/ListingPublish" element={<ListingPublish />} />
+        </Route>
+        
 
-        <Route path="/host/listing" element={<UnitListing />} />
-        <Route path="/host/listing/PropertyDescription" element={<PropertyDescription />} />
-        <Route path="/host/listing/PlaceDescription" element={<PlaceDescription />} />
-        <Route path="/host/listing/PlaceOffer" element={<PlaceOffer />} />
-        <Route path="/host/listing/PlaceLocation" element={<PlaceLocation />} />
-        <Route path="/host/listing/PlaceRate" element={<PlaceRate />} />
-        <Route path="/host/listing/PlaceDiscount" element={<PlaceDiscount />} />
-        <Route path="/host/listing/PlaceDetail" element={<PlaceDetail />} />
-        <Route path="/host/listing/ListingPublish" element={<ListingPublish />} />
+        <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['customer']} />}>
+          <Route path="/help"
+            element={
+              <HelpCenter
+                isMenuOpen={isMenuOpen}
+                setIsMenuOpen={setIsMenuOpen}
+                onOpenSignIn={handleOpenAuth}
+                onOpenRegister={handleOpenRegister}
+                onOpenChat={() => setIsChatOpen(true)}
+              />
+            }   
+          />
+          <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+          <Route path="/booking-confirmation-2" element={<BookingConfirmation2 />} />
+        </Route>
+        
+        
+        
       </Routes>
 
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
-        onSwitchToRegister={handleOpenRegister}
+        onLoginSuccess={(userData) => setUser(userData)}
       />
       <RegisterModal
         isOpen={isRegisterModalOpen}

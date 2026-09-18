@@ -1,5 +1,9 @@
 <?php
     require 'config.php';
+
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     
     $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
     $isLocalFrontend = preg_match(
@@ -15,6 +19,7 @@
     header('Content-Type: application/json');
     
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
         exit;
     }
     
