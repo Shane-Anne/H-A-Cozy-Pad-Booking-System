@@ -99,6 +99,8 @@ export default function App() {
             <ListedProperty
               isMenuOpen={isMenuOpen}
               setIsMenuOpen={setIsMenuOpen}
+              user={user}
+              onLogout={() => setUser(null)}
               onOpenSignIn={handleOpenAuth}
               onOpenRegister={handleOpenRegister}
             />
@@ -168,9 +170,6 @@ export default function App() {
               }
           />
         </Route>
-        
-        
-        
       </Routes>
 
       <AuthModal

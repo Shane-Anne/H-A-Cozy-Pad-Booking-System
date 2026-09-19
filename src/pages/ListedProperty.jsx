@@ -57,6 +57,8 @@ export default function PropertyDetail({
   onOpenSignIn,
   onOpenRegister,
   unitId, // optional: pass a specific unit_id to show; falls back to the first available unit
+  user,
+  onLogout,
 }) {
   const { unitId: routeUnitId } = useParams();
   const [units, setUnits] = useState([]);
@@ -163,6 +165,8 @@ export default function PropertyDetail({
       <Header
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
+        user={user}
+        onLogout={onLogout}
         onOpenSignIn={onOpenSignIn}
         onOpenRegister={onOpenRegister}
       />
