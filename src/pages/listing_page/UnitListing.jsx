@@ -1,10 +1,48 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../../lib/api';
+import { updateListingDraft } from '../../lib/listingDraft';
 import ListingHeader from '../../components/ListingHeader';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function UnitListing() {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+
+  useEffect(() => {
+    if (!editId) {
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/get_listing.php?building_id=${editId}`, {
+      credentials: 'include',
+    })
+      .then(async (response) => {
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Unable to load listing');
+        }
+
+        return data;
+      })
+      .then((data) => {
+        updateListingDraft({
+          editingBuildingId: data.building_id,
+          buildingName: data.building_name,
+          location: data.location,
+          unitName: data.unit_name,
+          description: data.description,
+          maxGuests: data.max_guests,
+          ratePerNight: data.rate_per_night,
+          status: data.status,
+        });
+      })
+      .catch((error) => {
+        console.error('Error loading listing:', error);
+      });
+  }, [editId]);
 
   const propertyTypes = [
     {

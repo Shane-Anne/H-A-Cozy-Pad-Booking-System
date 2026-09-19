@@ -42,6 +42,7 @@ function PinIcon() {
 export default function Publish() {
   const navigate = useNavigate();
   const draft = getListingDraft();
+  const isEditing = !!draft.editingBuildingId;
   const propertyName = draft.buildingName || 'Property Name';
   const propertyPlace = [draft.city, draft.country].filter(Boolean).join(', ') || 'Property Place';
 
@@ -63,12 +64,13 @@ export default function Publish() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/create_listing.php`,
+        `${API_BASE_URL}/${isEditing ? 'edit_listing.php' : 'create_listing.php'}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
+            buildingId: draft.editingBuildingId,
             buildingName: draft.buildingName,
             location,
             latitude: draft.latitude ?? null,
