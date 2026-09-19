@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 export default function Chatbot({ isOpen, onClose, onToggle }) {
   useEffect(() => {
     const scriptSrc = 'https://www.noupe.com/embed/01a0b92195487000847c5a3cf453248eb1c3.js';
-    
+   
     // Prevent duplicate script injection
     const existingScript = document.querySelector(`script[src="${scriptSrc}"]`);
     if (existingScript) return;
