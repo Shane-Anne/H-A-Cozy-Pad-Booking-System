@@ -153,7 +153,7 @@ export default function AdditionalInformation({
             }}
             className="space-y-8"
           >
-            {/* 1. Full Name */}
+     
             <section>
               <h3 className="text-sm font-semibold mb-3">1. Full Name</h3>
               <div className="border border-gray-300 rounded-xl overflow-hidden">
@@ -174,7 +174,7 @@ export default function AdditionalInformation({
               </div>
             </section>
 
-            {/* 2. Contact Information */}
+      
             <section>
               <h3 className="text-sm font-semibold mb-3">2. Contact Information</h3>
               <div className="border border-gray-300 rounded-xl overflow-hidden">
@@ -195,19 +195,19 @@ export default function AdditionalInformation({
               </div>
             </section>
 
-            {/* 3. Government-issued ID */}
+     
             <section>
               <h3 className="text-sm font-semibold mb-3">3. Government-Issued ID</h3>
               <FileUploadBox file={govId} onChange={setGovId} />
             </section>
 
-            {/* 4. Proof of Payment */}
+   
             <section>
               <h3 className="text-sm font-semibold mb-3">4. Proof of Payment</h3>
               <FileUploadBox file={proofOfPayment} onChange={setProofOfPayment} />
             </section>
 
-            {/* 5. Vehicle Information */}
+         
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold">5. Vehicle Information</h3>
@@ -295,7 +295,7 @@ export default function AdditionalInformation({
               )}
             </section>
 
-            {/* 6. Special Request */}
+           
             <section>
               <h3 className="text-sm font-semibold mb-3">6. Special Request</h3>
               <textarea
@@ -339,7 +339,7 @@ export default function AdditionalInformation({
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/trips", { state: { ...booking, bookingId: savedBookingId } })}
+                onClick={() => navigate("/trips")}
                 className="rounded-full bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800"
               >
                 View trips
