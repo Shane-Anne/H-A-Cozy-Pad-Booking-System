@@ -73,7 +73,7 @@ export default function App() {
 
                 {/* Help Center */}
                 <Route
-                    path="/help"
+                    path="/HelpCenter"
                     element={
                         <HelpCenter
                             isMenuOpen={isMenuOpen}
@@ -87,12 +87,12 @@ export default function App() {
 
                 {/* Host Dashboard */}
                 <Route
-                    path="/host/listings"
+                    path="/host/Listings"
                     element={<DashboardListings />}
                 />
 
                 <Route
-                    path="/host/reservations"
+                    path="/host/Reservations"
                     element={<DashboardReservations />}
                 />
             </Routes>
