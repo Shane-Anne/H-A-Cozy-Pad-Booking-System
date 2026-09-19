@@ -249,6 +249,14 @@ export default function BookingConfirmation({
       return;
     }
 
+    if (value < new Date().toISOString().split('T')[0]) {
+      setFieldError(
+        "checkIn",
+        "Check-in date cannot be in the past."
+      );
+      return;
+    }
+
     if (checkOut && value >= checkOut) {
       setFieldError(
         "checkIn",
@@ -517,6 +525,12 @@ export default function BookingConfirmation({
     if (!checkIn) {
       newErrors.checkIn =
         "Check-in date is required.";
+      isValid = false;
+    }
+
+    if (checkIn && checkIn < new Date().toISOString().split('T')[0]) {
+      newErrors.checkIn =
+        "Check-in date cannot be in the past.";
       isValid = false;
     }
 
@@ -821,6 +835,7 @@ export default function BookingConfirmation({
                       label="Check-in"
                       value={checkIn}
                       onChange={handleCheckInChange}
+                      min={new Date().toISOString().split('T')[0]}
                       max={checkOut || undefined}
                       error={errors.checkIn}
                     />
@@ -835,7 +850,7 @@ export default function BookingConfirmation({
                       onChange={
                         handleCheckOutChange
                       }
-                      min={checkIn || undefined}
+                      min={checkIn || new Date().toISOString().split('T')[0]}
                       error={errors.checkOut}
                     />
                   </div>

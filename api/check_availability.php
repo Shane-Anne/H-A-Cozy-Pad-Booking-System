@@ -19,6 +19,12 @@ if (!$checkInDate || !$checkOutDate || $checkOutDate <= $checkInDate) {
     exit;
 }
 
+if ($checkInDate < new DateTime('today')) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Bookings cannot be made for dates that have already passed']);
+    exit;
+}
+
 $stmt = $pdo->prepare(
     'SELECT booking_id FROM bookings
      WHERE unit_id = ?

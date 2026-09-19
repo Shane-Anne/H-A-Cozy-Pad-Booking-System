@@ -125,6 +125,12 @@ export default function PropertyDetail({
       return undefined;
     }
 
+    if (checkIn < new Date().toISOString().split('T')[0]) {
+      setIsDateRangeAvailable(null);
+      setAvailabilityError('Check-in date cannot be in the past.');
+      return undefined;
+    }
+
     const controller = new AbortController();
     setAvailabilityError('');
     fetch(`${API_BASE_URL}/check_availability.php?unit_id=${encodeURIComponent(unit.unit_id)}&check_in=${encodeURIComponent(checkIn)}&check_out=${encodeURIComponent(checkOut)}`, { signal: controller.signal })
@@ -257,6 +263,7 @@ export default function PropertyDetail({
                     <input
                       type="date"
                       value={checkIn}
+                      min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setCheckIn(e.target.value)}
                       className="bg-transparent outline-none text-sm"
                     />
@@ -266,6 +273,7 @@ export default function PropertyDetail({
                     <input
                       type="date"
                       value={checkOut}
+                      min={checkIn || new Date().toISOString().split('T')[0]}
                       onChange={(e) => setCheckOut(e.target.value)}
                       className="bg-transparent outline-none text-sm"
                     />

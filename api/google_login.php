@@ -26,7 +26,7 @@ $email = strtolower(trim($token['email']));
 $fullName = trim($token['name'] ?? $email);
 $fullName = substr($fullName, 0, 50);
 
-$stmt = $pdo->prepare('SELECT user_id, full_name, email, role FROM users WHERE email = ?');
+$stmt = $pdo->prepare('SELECT user_id, full_name, email, contact_num, role FROM users WHERE email = ?');
 $stmt->execute([$email]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -35,19 +35,29 @@ if (!$user) {
     $insert = $pdo->prepare(
         'INSERT INTO users (full_name, email, password, role, contact_num) VALUES (?, ?, ?, ?, ?)'
     );
-    $insert->execute([$fullName, $email, $temporaryPassword, 'customer', '00000000000']);
+    $insert->execute([$fullName, $email, $temporaryPassword, 'customer', '']);
     $user = [
         'user_id' => $pdo->lastInsertId(),
         'full_name' => $fullName,
         'email' => $email,
+        'contact_num' => '',
         'role' => 'customer',
     ];
 }
+
+if ($user['contact_num'] === '00000000000') {
+    $clearPlaceholder = $pdo->prepare('UPDATE users SET contact_num = ? WHERE user_id = ?');
+    $clearPlaceholder->execute(['', $user['user_id']]);
+    $user['contact_num'] = '';
+}
+
+$needsSetup = trim((string) ($user['contact_num'] ?? '')) === '';
 
 $_SESSION['user_id'] = $user['user_id'];
 $_SESSION['email'] = $user['email'];
 $_SESSION['role'] = $user['role'];
 $_SESSION['full_name'] = $user['full_name'];
+$_SESSION['needs_setup'] = $needsSetup;
 
 echo json_encode([
     'success' => true,
@@ -55,7 +65,9 @@ echo json_encode([
         'id' => $user['user_id'],
         'fullName' => $user['full_name'],
         'email' => $user['email'],
+        'contactNum' => $user['contact_num'],
         'role' => $user['role'],
+        'needsSetup' => $needsSetup,
     ],
 ]);
 ?>

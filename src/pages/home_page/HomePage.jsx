@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import SearchSection from './SearchSection';
 import PropertySection from './PropertySection';
@@ -61,6 +62,24 @@ export default function HomePage({
         onOpenSignIn={onOpenSignIn}
         onOpenRegister={onOpenRegister}
       />
+      {user?.needsSetup && (
+        <div className="border-b border-amber-200 bg-amber-50 px-5 py-4 md:px-10 lg:px-[52px]" role="alert">
+          <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="m-0 text-base font-semibold text-amber-950">Set up your account</h2>
+              <p className="mt-1 text-sm text-amber-900">
+                Complete your profile. You can continue browsing for now.
+              </p>
+            </div>
+            <Link
+              to="/profile"
+              className="inline-flex shrink-0 rounded-full bg-amber-900 px-5 py-2.5 text-sm font-semibold text-white no-underline hover:bg-amber-950"
+            >
+              Set up profile
+            </Link>
+          </div>
+        </div>
+      )}
       <main className="grow">
         <SearchSection onSearch={handleSearch} />
         <PropertySection properties={filteredProperties} />
