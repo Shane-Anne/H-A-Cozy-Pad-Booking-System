@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import HostHeader from '../../components/HostHeader';
 import { API_BASE_URL } from '../../lib/api';
+import noReservationsImage from '../../images/no-reservations.svg';
 
 export default function DashboardReservations() {
   const [activeTab, setActiveTab] = useState('soon');
@@ -205,15 +206,9 @@ export default function DashboardReservations() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-6">
-            <div className="w-24 h-24 rounded-2xl bg-neutral-200 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="M21 15l-5-5L5 21" />
-              </svg>
-            </div>
+            <img src={noReservationsImage} alt="No reservations" className="h-20 w-20 object-contain" />
             <p className="text-xl font-bold text-black">
-              {activeTab === 'today' ? 'No reservations for today' : activeTab === 'soon' ? 'No upcoming customer bookings' : 'No customer bookings yet'}
+              {activeTab === 'today' ? 'No reservations for today' : activeTab === 'soon' ? 'No upcoming customer reservations' : 'No customer bookings yet'}
             </p>
           </div>
         )}

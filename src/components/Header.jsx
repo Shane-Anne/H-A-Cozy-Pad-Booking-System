@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../lib/api';
+import logo from '../images/logo.png';
 
 export default function Header({
   isMenuOpen,
@@ -33,7 +34,7 @@ export default function Header({
   return (
     <header className="relative flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
       <Link to="../" className="text-3xl lg:text-4xl font-bold text-black no-underline">
-        H&A Cozy Pad
+        <img src={logo} alt="H&A Cozy Pad" className="h-20 w-auto object-contain" />
       </Link>
 
       <nav className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
