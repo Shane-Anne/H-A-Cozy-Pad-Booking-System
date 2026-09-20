@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Chatbot from '../components/Chatbot';
@@ -14,6 +14,8 @@ const FAQS = [
 export default function HelpCenter({
   isMenuOpen,
   setIsMenuOpen,
+  user,
+  onLogout,
   onOpenSignIn,
   onOpenRegister,
 }) {
@@ -28,6 +30,8 @@ export default function HelpCenter({
       <Header
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
+        user={user}
+        onLogout={onLogout}
         onOpenSignIn={onOpenSignIn}
         onOpenRegister={onOpenRegister}
       />

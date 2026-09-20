@@ -1,30 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../lib/api';
 
 export default function Header({
   isMenuOpen,
   setIsMenuOpen,
+  user,
+  onLogout,
   onOpenSignIn,
   onOpenRegister,
 }) {
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/session_check.php`, { credentials: 'include' })
-      .then((response) => response.json())
-      .then((data) => setIsLoggedIn(Boolean(data.loggedIn)))
-      .catch(() => setIsLoggedIn(false));
-
-    const handleAuthChange = (event) => {
-      setIsLoggedIn(Boolean(event.detail?.loggedIn));
-    };
-
-    window.addEventListener('auth-changed', handleAuthChange);
-    return () => window.removeEventListener('auth-changed', handleAuthChange);
-  }, []);
 
   // Replaces menu.js document click listener to close menu outside clicks
   useEffect(() => {
@@ -53,12 +40,12 @@ export default function Header({
         <ul className="flex gap-8 list-none m-0 p-0">
           <li><a href="../" className="text-xl hover:underline">All</a></li>
           <li><a href="#" className="text-xl hover:underline">Homes</a></li>
-          <li><a href="#" className="text-xl hover:underline">Reservations</a></li>
+          <li><a href="/host/reservations" className="text-xl hover:underline">Reservations</a></li>
         </ul>
       </nav>
 
       <div className="flex items-center gap-3">
-        {!isLoggedIn && (
+        {!user && (
           <>
             <button
               onClick={onOpenRegister}
@@ -91,7 +78,7 @@ export default function Header({
           ref={menuRef}
           className="absolute right-[30px] top-[90px] w-[280px] bg-white rounded-2xl shadow-xl border border-neutral-100 py-3 z-40"
         >
-          {isLoggedIn && (
+          {user && (
             <>
               <Link to="/host/listings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/></svg>
@@ -99,28 +86,28 @@ export default function Header({
               </Link>
             </>
           )}
-          <a href="#" className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
+          <Link to="/trips" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 16.5l20-9-6 18-3-7-7-3z"/></svg>
             Trips
-          </a>
-          <a href="#" className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
+          </Link>
+          <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
             Profile
-          </a>
+          </Link>
           <hr className="my-2 border-neutral-200" />
           <Link to="/help" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 no-underline text-black">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             Help Center
           </Link>
           <hr className="my-2 border-neutral-200" />
-          {isLoggedIn ? (
+          {user ? (
             <button
               onClick={async () => {
                 await fetch(`${API_BASE_URL}/logout.php`, {
                   method: 'POST',
                   credentials: 'include',
                 });
-                setIsLoggedIn(false);
+                onLogout();
                 setIsMenuOpen(false);
               }}
               className="w-full text-left flex items-center gap-3 px-5 py-3 text-base font-semibold hover:bg-neutral-100 bg-transparent border-0 cursor-pointer"

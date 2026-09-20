@@ -1,5 +1,9 @@
 <?php
     require 'config.php';
+
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     
     $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
     $isLocalFrontend = preg_match(
@@ -10,11 +14,12 @@
     header('Access-Control-Allow-Origin: ' . ($isLocalFrontend ? $requestOrigin : $FRONTEND_ORIGIN));
     header('Access-Control-Allow-Credentials: true');
     header('Access-Control-Allow-Headers: Content-Type');
-    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+    header('Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS');
     header('Vary: Origin');
     header('Content-Type: application/json');
     
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
         exit;
     }
     

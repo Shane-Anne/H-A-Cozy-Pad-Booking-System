@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function HostHeader({ activeNav = 'Today' }) {
@@ -44,7 +44,7 @@ export default function HostHeader({ activeNav = 'Today' }) {
           </li>
           <li>
             <Link
-              to="/host/reservations"
+              to="/host/calendar"
               className={`text-lg ${
                 activeNav === 'Calendar'
                   ? 'font-semibold border-b-2 border-black pb-1 text-black'
