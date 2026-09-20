@@ -180,3 +180,18 @@ create table NOT EXISTS unit_amenity(
         references unit_amenities(amenity_id)
         on delete cascade
 );
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    audit_log_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    entity_id INT NOT NULL,
+    details TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_audit_log_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);

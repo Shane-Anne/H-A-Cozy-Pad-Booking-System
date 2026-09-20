@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../lib/api';
+import logo from '../images/logo.png';
 
 export default function Header({
   isMenuOpen,
@@ -32,15 +33,15 @@ export default function Header({
 
   return (
     <header className="relative flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
-      <a href="../" className="text-3xl lg:text-4xl font-bold text-black no-underline">
-        H&A Cozy Pad
-      </a>
+      <Link to="../" className="text-3xl lg:text-4xl font-bold text-black no-underline">
+        <img src={logo} alt="H&A Cozy Pad" className="h-20 w-auto object-contain" />
+      </Link>
 
       <nav className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <ul className="flex gap-8 list-none m-0 p-0">
-          <li><a href="../" className="text-xl hover:underline">All</a></li>
-          <li><a href="#" className="text-xl hover:underline">Homes</a></li>
-          <li><a href="/host/reservations" className="text-xl hover:underline">Reservations</a></li>
+          <li><Link to="../" className="text-xl hover:underline">All</Link></li>
+          <li><Link to="/homes" className="text-xl hover:underline">Homes</Link></li>
+          <li><Link to="/host/reservations" className="text-xl hover:underline">Reservations</Link></li>
         </ul>
       </nav>
 
