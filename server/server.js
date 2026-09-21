@@ -34,19 +34,23 @@ app.post("/api/chat", async (req, res) => {
             conversation_id,
         } = req.body;
 
+        // Validate message
         if (!message || !message.trim()) {
             return res.status(400).json({
                 error: "Message is required.",
             });
         }
 
+        // Check API key
         if (!DIFY_API_KEY) {
+            console.error("DIFY_API_KEY is missing from .env");
+
             return res.status(500).json({
-                error: "DIFY_API_KEY is not configured.",
+                error: "Dify API key is not configured on the server.",
             });
         }
 
-        const response = await fetch(
+        const difyResponse = await fetch(
             `${DIFY_API_URL}/chat-messages`,
             {
                 method: "POST",
@@ -58,41 +62,39 @@ app.post("/api/chat", async (req, res) => {
 
                 body: JSON.stringify({
                     inputs: {},
-
-                    query: message,
-
-                    user: user || "guest-user",
-
-                    conversation_id:
-                        conversation_id || "",
-
+                    query: message.trim(),
                     response_mode: "blocking",
+                    user: user || "guest-user",
+                    conversation_id: conversation_id || "",
                 }),
             }
         );
 
-        const data = await response.json();
+        const data = await difyResponse.json();
 
-        if (!response.ok) {
-            console.error("Dify error:", data);
+        console.log("Dify status:", difyResponse.status);
+        console.log("Dify response:", data);
 
-            return res.status(response.status).json({
+        if (!difyResponse.ok) {
+            return res.status(difyResponse.status).json({
                 error:
                     data.message ||
-                    data.error ||
+                    data.code ||
                     "Dify API request failed.",
             });
         }
 
-        res.json({
-            answer: data.answer,
-            conversation_id: data.conversation_id,
+        return res.json({
+            answer: data.answer || "Dify returned an empty response.",
+            conversation_id: data.conversation_id || "",
+            message_id: data.message_id || "",
         });
     } catch (error) {
-        console.error("Server error:", error);
+        console.error("Chatbot server error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             error: "Unable to connect to Dify.",
+            details: error.message,
         });
     }
 });

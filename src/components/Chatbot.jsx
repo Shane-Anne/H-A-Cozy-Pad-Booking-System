@@ -50,7 +50,7 @@ export default function Chatbot({ isOpen, onClose }) {
                 );
             }
 
-            setConversationId(data.conversation_id);
+            setConversationId(data.conversation_id || "");
 
             setMessages((previous) => [
                 ...previous,
@@ -66,7 +66,9 @@ export default function Chatbot({ isOpen, onClose }) {
                 ...previous,
                 {
                     sender: "bot",
-                    text: "Sorry, I couldn't connect to the chatbot.",
+                    text:
+                        error.message ||
+                        "Sorry, I couldn't connect to the chatbot.",
                 },
             ]);
         } finally {
