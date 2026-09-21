@@ -12,7 +12,7 @@
         exit;
     }
 
-    $stmt = $pdo->prepare('SELECT user_id, full_name, email, password, role FROM users WHERE email = ?');
+    $stmt = $pdo->prepare('SELECT user_id, full_name, email, password, contact_num, role FROM users WHERE email = ?');
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -25,6 +25,7 @@
     $_SESSION['user_id'] = $user['user_id'];
     $_SESSION['email'] = $user['email'];
     $_SESSION['role'] = $user['role'];
+    $_SESSION['needs_setup'] = trim((string) ($user['contact_num'] ?? '')) === '';
 
     echo json_encode([
         'success' => true,
@@ -33,6 +34,8 @@
             'fullName' => $user['full_name'],
             'email' => $user['email'],
             'role' => $user['role'],
+            'contactNum' => $user['contact_num'],
+            'needsSetup' => $_SESSION['needs_setup'],
         ],
     ]);
 ?>

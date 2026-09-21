@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         }
         $updates[] = 'contact_num = ?';
         $values[] = $contactNum;
+        $_SESSION['needs_setup'] = false;
     }
 
     if (!empty($data['password'])) {
@@ -83,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
             'email' => $updatedUser['email'],
             'contactNum' => $updatedUser['contact_num'],
             'role' => strtolower($updatedUser['role']),
+            'needsSetup' => trim((string) ($updatedUser['contact_num'] ?? '')) === '',
         ],
     ]);
     exit;
@@ -107,6 +109,7 @@ echo json_encode([
         'email' => $user['email'],
         'contactNum' => $user['contact_num'],
         'role' => strtolower($user['role']),
+        'needsSetup' => trim((string) ($user['contact_num'] ?? '')) === '',
     ],
 ]);
 ?>

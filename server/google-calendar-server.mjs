@@ -37,7 +37,7 @@ app.get('/auth/callback', async (request, response) => {
     const { tokens } = await oauth2Client.getToken(request.query.code);
     credentials = tokens;
     oauth2Client.setCredentials(credentials);
-    response.redirect(`${frontendOrigin}/host/calendar?connected=1`);
+    response.redirect(`${frontendOrigin}/?connected=1`);
   } catch (error) {
     console.error('Google OAuth error:', error.message);
     response.status(500).send('Google Calendar authorization failed.');

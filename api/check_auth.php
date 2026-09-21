@@ -18,7 +18,8 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
         'user' => [
             'user_id' => $_SESSION['user_id'],
             'role'    => strtolower($_SESSION['role']), // Ensures lowercase ('admin', 'assistant', 'customer')
-            'name'    => $_SESSION['full_name'] ?? ''
+            'name'    => $_SESSION['full_name'] ?? '',
+            'needsSetup' => (bool) ($_SESSION['needs_setup'] ?? false),
         ]
     ]);
 } else {

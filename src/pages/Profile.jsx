@@ -87,7 +87,12 @@ export default function Profile({ user }) {
       }
       if (!response.ok) throw new Error(data.error || 'Unable to save changes');
 
-      if (data.user) setAccount(data.user);
+      if (data.user) {
+        setAccount(data.user);
+        window.dispatchEvent(new CustomEvent('auth-changed', {
+          detail: { loggedIn: true, user: data.user },
+        }));
+      }
       setEditingField(null);
     } catch (error) {
       setSaveError(error.message);

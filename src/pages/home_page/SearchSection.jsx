@@ -9,6 +9,12 @@ export default function SearchSection({ onSearch }) {
   const handleSearch = (e) => {
     if (e) e.preventDefault();
 
+    const today = new Date().toISOString().split('T')[0];
+    if (checkInDate && checkInDate < today) {
+      alert('Check-in date cannot be in the past.');
+      return;
+    }
+
     // Constraint validation: check_out_date must be > check_in_date
     if (checkInDate && checkOutDate && checkOutDate <= checkInDate) {
       alert('Check-out date must be after the check-in date.');

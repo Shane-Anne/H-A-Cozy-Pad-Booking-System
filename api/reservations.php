@@ -17,6 +17,14 @@ if (!in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'assistant'], true)
     exit;
 }
 
+$expireBookings = $pdo->prepare(
+    'UPDATE bookings
+     SET status = \'rejected\'
+     WHERE status NOT IN (\'cancelled\', \'rejected\')
+     AND check_out_date < CURDATE()'
+);
+$expireBookings->execute();
+
 $stmt = $pdo->query(
     'SELECT
         b.booking_id,

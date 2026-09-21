@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../lib/api'
+import { useNavigate } from 'react-router-dom';
+import GoogleAuthButton from './GoogleAuthButton';
 
 export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   // Lock body scroll and register escape key (from login.js)
   useEffect(() => {
@@ -49,7 +52,7 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
         detail: { loggedIn: true, user: data.user },
       }));
       onClose();
-    } catch (err) {
+    } catch {
       setError('Could not reach the server. Is XAMPP running?');
     } finally {
       setIsSubmitting(false);
@@ -70,7 +73,40 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
           &times;
         </button>
         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8">Log in or Sign up</h2>
-        
+        <GoogleAuthButton
+          onSuccess={async (credentialResponse) => {
+            setError('');
+            setIsSubmitting(true);
+
+            try {
+              const res = await fetch(`${API_BASE_URL}/google_login.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ credential: credentialResponse.credential }),
+              });
+              const data = await res.json();
+
+              if (!res.ok) throw new Error(data.error || 'Google login failed.');
+
+              window.dispatchEvent(new CustomEvent('auth-changed', {
+                detail: { loggedIn: true, user: data.user },
+              }));
+              onClose();
+              navigate('/');
+            } catch (loginError) {
+              setError(loginError.message || 'Google login failed.');
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+          onError={() => setError('Google login failed. Check the configured authorized origin.')}
+        />
+        <div className="my-6 flex items-center gap-4 text-sm font-medium text-neutral-400">
+          <span className="h-px flex-1 bg-neutral-200" />
+          <span>OR</span>
+          <span className="h-px flex-1 bg-neutral-200" />
+        </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <input
             type="text"
