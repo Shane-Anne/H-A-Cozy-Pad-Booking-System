@@ -34,6 +34,7 @@ import PlaceRate from './pages/listing_page/PlaceRate';
 import PlaceDiscount from './pages/listing_page/PlaceDiscount';
 import PlaceDetail from './pages/listing_page/PlaceDetail';
 import ListingPublish from './pages/listing_page/ListingPublish';
+import PlaceImages from './pages/listing_page/PlaceImages';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -125,6 +126,7 @@ export default function App() {
           <Route path="/host/listing/PlaceDiscount" element={<PlaceDiscount />} />
           <Route path="/host/listing/PlaceDetail" element={<PlaceDetail />} />
           <Route path="/host/listing/ListingPublish" element={<ListingPublish />} />
+          <Route path="/host/listing/PlaceImages" element={<PlaceImages />} />
         </Route>
         
 

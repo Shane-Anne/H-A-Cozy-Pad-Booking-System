@@ -1,5 +1,8 @@
 <?php
+
 require 'db.php';
+
+header('Content-Type: application/json');
 
 $stmt = $pdo->query(
     "SELECT
@@ -8,31 +11,83 @@ $stmt = $pdo->query(
         b.location,
         b.latitude,
         b.longitude,
+
         u.unit_id,
         u.unit_name,
         u.description,
         u.max_guests,
         u.rate_per_night,
-        u.status, #amenities fetching - added by sel
-        GROUP_CONCAT(DISTINCT a.amenity_name ORDER BY a.amenity_name SEPARATOR ', ') AS amenities
+        u.status,
+
+        GROUP_CONCAT(
+            DISTINCT a.amenity_name
+            ORDER BY a.amenity_name
+            SEPARATOR ', '
+        ) AS amenities,
+
+        GROUP_CONCAT(
+            DISTINCT ui.image_path
+            ORDER BY ui.image_id
+            SEPARATOR '|||'
+        ) AS images
+
     FROM buildings b
-    INNER JOIN units u ON b.building_id = u.building_id
-    LEFT JOIN unit_amenity ua ON ua.unit_id = u.unit_id
-    LEFT JOIN unit_amenities a ON a.amenity_id = ua.amenity_id
+
+    INNER JOIN units u
+        ON b.building_id = u.building_id
+
+    LEFT JOIN unit_amenity ua
+        ON ua.unit_id = u.unit_id
+
+    LEFT JOIN unit_amenities a
+        ON a.amenity_id = ua.amenity_id
+
+    LEFT JOIN unit_images ui
+        ON ui.unit_id = u.unit_id
+
     WHERE u.status = 'available'
+
     GROUP BY
         b.building_id,
         b.building_name,
         b.location,
         b.latitude,
         b.longitude,
+
         u.unit_id,
         u.unit_name,
         u.description,
         u.max_guests,
         u.rate_per_night,
         u.status
+
     ORDER BY u.created_at DESC"
 );
 
-echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+$listings =
+    $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/*
+|--------------------------------------------------------------------------
+| Convert comma-separated image paths into arrays
+|--------------------------------------------------------------------------
+*/
+
+foreach ($listings as &$listing) {
+
+    if (
+        !empty($listing['images'])
+    ) {
+        $listing['images'] =
+            explode(
+                '|||',
+                $listing['images']
+            );
+    } else {
+        $listing['images'] = [];
+    }
+}
+
+unset($listing);
+
+echo json_encode($listings);
