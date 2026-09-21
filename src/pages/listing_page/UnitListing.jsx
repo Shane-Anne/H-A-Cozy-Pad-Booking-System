@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function UnitListing() {
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
@@ -14,6 +15,8 @@ export default function UnitListing() {
     if (!editId) {
       return;
     }
+
+    setLoading(true);
 
     fetch(`${API_BASE_URL}/get_listing.php?building_id=${editId}`, {
       credentials: 'include',
@@ -37,10 +40,16 @@ export default function UnitListing() {
           maxGuests: data.max_guests,
           ratePerNight: data.rate_per_night,
           status: data.status,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          amenities: data.amenities || [],
         });
+
+        setLoading(false);
       })
       .catch((error) => {
         console.error('Error loading listing:', error);
+        setLoading(false);
       });
   }, [editId]);
 
@@ -142,24 +151,25 @@ export default function UnitListing() {
           </button>
 
           {/* Continue */}
-        <button
+          <button
             type="button"
-            disabled={!selectedProperty}
+            disabled={!selectedProperty || loading}
             onClick={() => navigate('/host/listing/PropertyDescription')}
             className={`
-                w-[142px] h-[50px]
-                rounded-full
-                border border-black
-                text-[20px]
-                transition
-                ${
-                selectedProperty
-                    ? 'bg-black text-white hover:bg-neutral-800 cursor-pointer'
-                    : 'bg-neutral-200 text-black cursor-not-allowed'
-                }
-            `} >
-            Continue
-        </button>
+              w-[142px] h-[50px]
+              rounded-full
+              border border-black
+              text-[20px]
+              transition
+              ${
+                selectedProperty && !loading
+                  ? 'bg-black text-white hover:bg-neutral-800 cursor-pointer'
+                  : 'bg-neutral-200 text-black cursor-not-allowed'
+              }
+            `}
+          >
+            {loading ? 'Loading...' : 'Continue'}
+          </button>
         </div>
       </main>
     </div>
