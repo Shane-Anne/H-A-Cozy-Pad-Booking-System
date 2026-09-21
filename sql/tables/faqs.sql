@@ -9,3 +9,125 @@ create table faqs(
         references faqs_categories(category_id)
         on delete cascade
 );
+
+INSERT INTO faqs (category_id, question, answer) VALUES
+
+(1, 'How can I book a unit?',
+'You can book a unit through the H&A Cozy Pad website by selecting your preferred dates and an available unit. You may also contact H&A Cozy Pad directly for assistance.'),
+(1, 'What information is required when making a reservation?',
+'You need to provide your full name, contact number, email address, preferred check-in and check-out dates, total number of guests, and a valid government-issued ID.'),
+(1, 'How far in advance can I make a reservation?',
+'H&A Cozy Pad accepts reservations up to 3 to 6 months in advance. Early booking is recommended to secure your preferred dates.'),
+(1, 'Can I modify my reservation after booking?',
+'Yes. Reservation modifications, such as changing dates or adjusting the number of guests, are subject to availability and must be requested before the scheduled check-in date. Please contact the H&A Cozy Pad owner or assistant to request a modification.'),
+(1, 'Can I cancel my reservation?',
+'Yes. You may request to cancel your reservation according to the H&A Cozy Pad cancellation policy. Please contact the owner or assistant if you need to cancel a specific reservation.'),
+(1, 'What is the cancellation policy?',
+'Cancellations made well in advance may receive a full or partial refund, depending on the applicable cancellation terms. Cancellations made close to the check-in date or certain reservation fees may be non-refundable. For a specific cancellation or refund request, please contact the H&A Cozy Pad owner or assistant.'),
+(1, 'How will I know if my booking has been approved?',
+'Once your booking details and payment proof have been verified, you will receive a confirmation message and email containing your reservation details.'),
+(1, 'How long does it take to confirm a reservation?',
+'Booking confirmation typically takes 1 to 24 hours after your proof of payment has been submitted.'),
+(1, 'Can I book for someone else?',
+'Yes. You can book for someone else. Please provide the primary guest''s name and contact details during the reservation process.'),
+(1, 'What happens if my preferred dates are unavailable?',
+'If your preferred dates are unavailable, you may request to join the waitlist or choose alternative available dates.'),
+
+(2, 'What payment methods are accepted?',
+'H&A Cozy Pad accepts QR and cash payments upon agreement.'),
+(2, 'How much is the required payment or reservation fee?',
+'A standard down payment or reservation fee is required to secure a booking. The exact amount or applicable fee will be shown during the booking process if available.'),
+(2, 'When should I make the payment?',
+'The reservation fee must be paid within 24 hours after placing your booking request to prevent automatic cancellation.'),
+(2, 'Where should I send the payment?',
+'Payment details and account information will be displayed after booking submission and will also be sent to you.'),
+(2, 'What proof of payment should I submit?',
+'Please upload a clear screenshot or photo of your transaction receipt showing the transaction reference number and date.'),
+(2, 'How long does payment verification take?',
+'Payment verification usually takes between 1 to 12 hours.'),
+(2, 'Is the payment refundable?',
+'Reservation fees are generally non-refundable unless the applicable cancellation terms allow a refund or the reservation is cancelled by management. For a specific refund request, please contact the H&A Cozy Pad owner or assistant.'),
+(2, 'What happens if my payment cannot be verified?',
+'The H&A Cozy Pad team will contact you if an updated receipt or transaction reference number is needed before the reserved slot is released.'),
+(2, 'Is there a security deposit?',
+'Yes. A refundable security deposit is collected upon check-in and returned upon check-out after the unit has been inspected.'),
+(2, 'Are there additional charges?',
+'Additional charges may apply for extra guests beyond the standard unit capacity, late check-outs, or damage to the property.'),
+
+(3, 'What types of units are available?',
+'H&A Cozy Pad offers fully furnished studio, 1-bedroom, and multi-guest pad suites.'),
+(3, 'How many guests can each unit accommodate?',
+'Capacity varies by unit. Standard units can accommodate up to 2 guests, while larger family-oriented suites can accommodate more guests. The applicable maximum capacity depends on the specific unit.'),
+(3, 'What amenities are included?',
+'Amenities include Wi-Fi, air conditioning, smart TV, basic kitchenware, hot and cold shower, and fresh linens.'),
+(3, 'Are towels and toiletries provided?',
+'Yes. Clean towels and basic complimentary toiletries are provided for guests.'),
+(3, 'Is Wi-Fi available?',
+'Yes. Wi-Fi is provided free of charge for checked-in guests.'),
+(3, 'Is air conditioning available?',
+'Yes. Units are equipped with air conditioning.'),
+(3, 'Is parking available?',
+'Yes. On-site or nearby secured parking options are available for guests.'),
+(3, 'Are cooking facilities available?',
+'Selected units include cooking facilities such as induction cooktops, rice cookers, and microwave ovens for light cooking.'),
+(3, 'Are pets allowed?',
+'Pet policies depend on the specific unit. Please inform H&A Cozy Pad in advance if you plan to bring a pet so the owner or assistant can confirm the applicable rules for your reservation.'),
+(3, 'Are all amenities available in every unit?',
+'Not necessarily. Some amenities, such as cooking facilities, may only be available in selected units. Please check the information for the specific unit or contact the H&A Cozy Pad owner or assistant for confirmation.'),
+
+-- =====================================================
+-- 4. POLICIES & HOUSE RULES
+-- =====================================================
+
+(4, 'What are the house rules?',
+'House rules include respecting quiet hours, taking care of the provided amenities and property, and not engaging in illegal activities.'),
+
+(4, 'Is smoking allowed?',
+'Smoking is strictly prohibited inside the units. Designated smoking areas are available outside.'),
+
+(4, 'Are visitors allowed?',
+'Day visitors must be registered with management before arrival.'),
+
+(4, 'Is there a maximum number of guests?',
+'Yes. Strict capacity limits apply to each unit type to ensure guest safety and comfort.'),
+
+(4, 'Can I bring additional guests?',
+'Additional guests may be subject to the maximum capacity of the unit and additional charges. Please contact the H&A Cozy Pad owner or assistant if you need to add guests to a specific reservation.'),
+
+
+-- =====================================================
+-- 5. LOCATION & SUPPORT
+-- =====================================================
+
+(5, 'Where is H&A Cozy Pad located?',
+'H&A Cozy Pad is located in an easily accessible neighborhood. The exact property location should be obtained from the official H&A Cozy Pad website or booking confirmation.'),
+
+(5, 'How can I get to H&A Cozy Pad?',
+'Detailed map locations and directions will be provided in the booking confirmation voucher.'),
+
+(5, 'Is there a nearby landmark?',
+'H&A Cozy Pad is situated near commercial areas and local landmarks. For specific landmarks or directions, please refer to the official location information or contact the H&A Cozy Pad owner or assistant.'),
+
+(5, 'What are the nearby establishments or attractions?',
+'Convenience stores, restaurants, and shopping centers are located within a short distance of the property. For specific nearby establishments or attractions, please contact the H&A Cozy Pad owner or assistant.'),
+
+(5, 'How can I contact H&A Cozy Pad?',
+'H&A Cozy Pad can be contacted through the official contact form, direct phone line, email, or official social media channels.'),
+
+(5, 'How can I send an inquiry?',
+'You can use the search bar or chatbot on the H&A Cozy Pad website, or select "Contact Us" to send a direct message.'),
+
+(5, 'What should I do if I have a problem during my stay?',
+'Contact the on-site caretaker or host immediately using the contact details provided at check-in.'),
+
+(5, 'What should I do if I have an emergency during my stay?',
+'Contact the appropriate emergency services when necessary and notify the H&A Cozy Pad caretaker or host using the contact details provided at check-in.'),
+
+(5, 'How can I access the admin login?',
+'The administration portal is intended only for authorized H&A Cozy Pad personnel. Authorized personnel can access it through the dedicated staff login page.'),
+
+(5, 'Can customers access the admin portal?',
+'No. The administration portal is restricted to authorized personnel.'),
+
+(5, 'Can the chatbot log in to the admin system?',
+'No. The chatbot does not have access to the administration system.');
