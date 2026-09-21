@@ -109,6 +109,15 @@ export default function App() {
                 onClose={() => setIsRegisterModalOpen(false)}
             />
 
+            {!isChatOpen && (
+                <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="fixed bottom-6 right-6 z-40 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg hover:bg-gray-700"
+                >
+                💬 Chat
+            </button>
+            )}
+
             {/* 💬 Global Floating Chatbot Bubble */}
             <Chatbot
                 isOpen={isChatOpen}
