@@ -87,7 +87,7 @@ export default function Chatbot({ isOpen, onClose }) {
             <div className="bg-gray-800 text-white px-4 py-3 flex justify-between items-center">
                 <div>
                     <h3 className="font-semibold">
-                        H&A Cozy Pad
+                        CozyBot
                     </h3>
 
                     <p className="text-xs text-gray-300">
