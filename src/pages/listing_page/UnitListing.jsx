@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../lib/api';
-import { updateListingDraft } from '../../lib/listingDraft';
+import {
+  getListingDraft,
+  updateListingDraft,
+} from '../../lib/listingDraft';
 import ListingHeader from '../../components/ListingHeader';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function UnitListing() {
-  const [selectedProperty, setSelectedProperty] = useState(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
+
+  const [selectedProperty, setSelectedProperty] = useState(() => {
+    const draft = getListingDraft();
+    return draft.propertyCategory || null;
+  });
 
   useEffect(() => {
     if (!editId) {
@@ -37,7 +44,12 @@ export default function UnitListing() {
           maxGuests: data.max_guests,
           ratePerNight: data.rate_per_night,
           status: data.status,
+
+          // Keep the property category when editing.
+          propertyCategory: data.property_category || 'home',
         });
+
+        setSelectedProperty(data.property_category || 'home');
       })
       .catch((error) => {
         console.error('Error loading listing:', error);
@@ -64,6 +76,26 @@ export default function UnitListing() {
         'Standalone units rented as a whole, such as individual apartments/flats, single bungalows, villas, and guest houses. They offer a residential experience for travelers seeking privacy and self-sufficient stays.',
     },
   ];
+
+  const handlePropertySelect = (propertyId) => {
+    setSelectedProperty(propertyId);
+
+    updateListingDraft({
+      propertyCategory: propertyId,
+    });
+  };
+
+  const handleContinue = () => {
+    if (!selectedProperty) {
+      return;
+    }
+
+    updateListingDraft({
+      propertyCategory: selectedProperty,
+    });
+
+    navigate('/host/listing/PropertyDescription');
+  };
 
   return (
     <div className="min-h-screen bg-white text-black font-sans flex flex-col">
@@ -93,7 +125,7 @@ export default function UnitListing() {
                 <button
                   key={property.id}
                   type="button"
-                  onClick={() => setSelectedProperty(property.id)}
+                  onClick={() => handlePropertySelect(property.id)}
                   className={`
                     block w-full text-left
                     border border-black
@@ -142,24 +174,26 @@ export default function UnitListing() {
           </button>
 
           {/* Continue */}
-        <button
+          <button
             type="button"
             disabled={!selectedProperty}
-            onClick={() => navigate('/host/listing/PropertyDescription')}
+            onClick={handleContinue}
             className={`
-                w-[142px] h-[50px]
-                rounded-full
-                border border-black
-                text-[20px]
-                transition
-                ${
+              w-[142px] h-[50px]
+              rounded-full
+              border border-black
+              text-[20px]
+              transition
+              ${
                 selectedProperty
-                    ? 'bg-black text-white hover:bg-neutral-800 cursor-pointer'
-                    : 'bg-neutral-200 text-black cursor-not-allowed'
-                }
-            `} >
+                  ? 'bg-black text-white hover:bg-neutral-800 cursor-pointer'
+                  : 'bg-neutral-200 text-black cursor-not-allowed'
+              }
+            `}
+          >
             Continue
-        </button>
+          </button>
+
         </div>
       </main>
     </div>

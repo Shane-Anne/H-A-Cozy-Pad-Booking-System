@@ -6,8 +6,17 @@ header('Content-Type: application/json');
 
 $data = $_POST;
 
-$buildingName = trim($data['buildingName'] ?? '');
-$location = trim($data['location'] ?? '');
+$buildingName = trim(
+    $data['buildingName'] ?? ''
+);
+
+$propertyCategory = trim(
+    $data['propertyCategory'] ?? ''
+);
+
+$location = trim(
+    $data['location'] ?? ''
+);
 
 $latitude = $data['latitude'] ?? null;
 $longitude = $data['longitude'] ?? null;
@@ -30,11 +39,50 @@ $ratePerNight = (float) (
 
 $amenities = $data['amenities'] ?? [];
 
-/*
-|--------------------------------------------------------------------------
-| Validation
-|--------------------------------------------------------------------------
-*/
+
+$allowedPropertyCategories = [
+    'home',
+    'hotel',
+    'unique',
+];
+
+if (
+    !in_array(
+        $propertyCategory,
+        $allowedPropertyCategories,
+        true
+    )
+) {
+    http_response_code(400);
+
+    echo json_encode([
+        'error' => 'Invalid property category'
+    ]);
+
+    exit;
+}
+
+$allowedUnitNames = [
+    'Entire place',
+    'Room',
+    'Hostel shared-room',
+];
+
+if (
+    !in_array(
+        $unitName,
+        $allowedUnitNames,
+        true
+    )
+) {
+    http_response_code(400);
+
+    echo json_encode([
+        'error' => 'Invalid property type'
+    ]);
+
+    exit;
+}
 
 if (
     !$buildingName ||
@@ -46,12 +94,12 @@ if (
     http_response_code(400);
 
     echo json_encode([
-        'error' =>
-            'Complete the required listing fields'
+        'error' => 'Complete the required listing fields'
     ]);
 
     exit;
 }
+
 
 if (!is_array($amenities)) {
     http_response_code(400);
@@ -62,12 +110,6 @@ if (!is_array($amenities)) {
 
     exit;
 }
-
-/*
-|--------------------------------------------------------------------------
-| Latitude validation
-|--------------------------------------------------------------------------
-*/
 
 if (
     $latitude !== null &&
@@ -87,12 +129,6 @@ if (
     exit;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Longitude validation
-|--------------------------------------------------------------------------
-*/
-
 if (
     $longitude !== null &&
     $longitude !== '' &&
@@ -111,12 +147,6 @@ if (
     exit;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Normalize empty coordinates to NULL
-|--------------------------------------------------------------------------
-*/
-
 if ($latitude === '') {
     $latitude = null;
 }
@@ -125,12 +155,6 @@ if ($longitude === '') {
     $longitude = null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Both coordinates must exist together
-|--------------------------------------------------------------------------
-*/
-
 if (
     ($latitude === null) !==
     ($longitude === null)
@@ -138,54 +162,38 @@ if (
     http_response_code(400);
 
     echo json_encode([
-        'error' =>
-            'Both latitude and longitude are required'
+        'error' => 'Both latitude and longitude are required'
     ]);
 
     exit;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Start transaction
-|--------------------------------------------------------------------------
-*/
 
 try {
 
     $pdo->beginTransaction();
 
-    /*
-    |--------------------------------------------------------------------------
-    | Create building
-    |--------------------------------------------------------------------------
-    */
-
     $building = $pdo->prepare(
         'INSERT INTO buildings
         (
             building_name,
+            property_category,
             location,
             latitude,
             longitude
         )
-        VALUES (?, ?, ?, ?)'
+        VALUES (?, ?, ?, ?, ?)'
     );
 
     $building->execute([
         $buildingName,
+        $propertyCategory,
         $location,
         $latitude,
         $longitude,
     ]);
 
     $buildingId = $pdo->lastInsertId();
-
-    /*
-    |--------------------------------------------------------------------------
-    | Create unit
-    |--------------------------------------------------------------------------
-    */
 
     $unit = $pdo->prepare(
         'INSERT INTO units
@@ -209,12 +217,6 @@ try {
 
     $unitId = $pdo->lastInsertId();
 
-    /*
-    |--------------------------------------------------------------------------
-    | Save amenities
-    |--------------------------------------------------------------------------
-    */
-
     $saveAmenity = $pdo->prepare(
         'INSERT INTO unit_amenities
         (amenity_name)
@@ -228,6 +230,7 @@ try {
         (unit_id, amenity_id)
         VALUES (?, ?)'
     );
+
 
     foreach ($amenities as $amenityName) {
 
@@ -243,8 +246,7 @@ try {
             $amenityName
         ]);
 
-        $amenityId =
-            $pdo->lastInsertId();
+        $amenityId = $pdo->lastInsertId();
 
         $linkAmenity->execute([
             $unitId,
@@ -252,23 +254,19 @@ try {
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Save property images
-    |--------------------------------------------------------------------------
-    */
-
     $uploadDirectory =
-        __DIR__ .
-        '/uploads/properties/';
+        __DIR__ . '/uploads/properties/';
+
 
     if (!is_dir($uploadDirectory)) {
 
-        if (!mkdir(
-            $uploadDirectory,
-            0755,
-            true
-        )) {
+        if (
+            !mkdir(
+                $uploadDirectory,
+                0755,
+                true
+            )
+        ) {
             throw new Exception(
                 'Unable to create image upload directory.'
             );
@@ -297,6 +295,7 @@ try {
             'image/png' => 'png',
         ];
 
+
         foreach (
             $_FILES['images']['tmp_name']
             as $index => $temporaryFile
@@ -306,12 +305,14 @@ try {
                 $_FILES['images']['error'][$index]
                 ?? UPLOAD_ERR_NO_FILE;
 
+
             if (
                 $uploadError ===
                 UPLOAD_ERR_NO_FILE
             ) {
                 continue;
             }
+
 
             if (
                 $uploadError !==
@@ -322,12 +323,11 @@ try {
                 );
             }
 
+
             $fileSize =
                 (int) $_FILES['images']['size'][$index];
 
-            /*
-            | Maximum 10 MB
-            */
+
             if (
                 $fileSize >
                 10 * 1024 * 1024
@@ -337,13 +337,12 @@ try {
                 );
             }
 
-            /*
-            | Detect actual MIME type
-            */
+
             $mimeType =
                 mime_content_type(
                     $temporaryFile
                 );
+
 
             if (
                 !isset(
@@ -355,12 +354,11 @@ try {
                 );
             }
 
+
             $extension =
                 $allowedMimeTypes[$mimeType];
 
-            /*
-            | Generate unique filename
-            */
+
             $filename =
                 $unitId .
                 '_' .
@@ -370,13 +368,12 @@ try {
                 '.' .
                 $extension;
 
+
             $destination =
                 $uploadDirectory .
                 $filename;
 
-            /*
-            | Move uploaded file
-            */
+
             if (
                 !move_uploaded_file(
                     $temporaryFile,
@@ -388,22 +385,23 @@ try {
                 );
             }
 
-            /*
-            | Path stored in database
-            */
+
             $imagePath =
                 'uploads/properties/' .
                 $filename;
+
 
             $saveImage->execute([
                 $unitId,
                 $imagePath
             ]);
 
+
             $uploadedImages[] =
                 $imagePath;
         }
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -411,17 +409,13 @@ try {
     |--------------------------------------------------------------------------
     */
 
-    if (count($uploadedImages) === 0) {
+    if (
+        count($uploadedImages) === 0
+    ) {
         throw new Exception(
             'Please upload at least one property image.'
         );
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Finish transaction
-    |--------------------------------------------------------------------------
-    */
 
     $pdo->commit();
 
@@ -429,8 +423,11 @@ try {
         'success' => true,
         'buildingId' => (int) $buildingId,
         'unitId' => (int) $unitId,
+        'propertyCategory' => $propertyCategory,
+        'unitName' => $unitName,
         'images' => $uploadedImages,
     ]);
+
 
 } catch (Throwable $error) {
 
@@ -441,7 +438,6 @@ try {
     http_response_code(500);
 
     echo json_encode([
-        'error' =>
-            $error->getMessage()
+        'error' => $error->getMessage()
     ]);
 }

@@ -1,338 +1,338 @@
-import { useEffect, useState } from 'react';
-import ListingHeader from '../../components/ListingHeader';
-import { useNavigate } from 'react-router-dom';
-import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
+  import { useEffect, useState } from 'react';
+  import ListingHeader from '../../components/ListingHeader';
+  import { useNavigate } from 'react-router-dom';
+  import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
+  import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+  import L from 'leaflet';
 
-import 'leaflet/dist/leaflet.css';
-import markerIconPng from 'leaflet/dist/images/marker-icon.png';
-import markerShadowPng from 'leaflet/dist/images/marker-shadow.png';
+  import 'leaflet/dist/leaflet.css';
+  import markerIconPng from 'leaflet/dist/images/marker-icon.png';
+  import markerShadowPng from 'leaflet/dist/images/marker-shadow.png';
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIconPng,
-  iconUrl: markerIconPng,
-  shadowUrl: markerShadowPng
-});
-
-const DefaultIcon = L.icon({
-  iconUrl: markerIconPng,
-  shadowUrl: markerShadowPng,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-L.Marker.prototype.options.icon = DefaultIcon;
-
-function MapClickHandler({ onLocationPick }) {
-  useMapEvents({
-    click(e) {
-      onLocationPick(e.latlng);
-    },
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: markerIconPng,
+    iconUrl: markerIconPng,
+    shadowUrl: markerShadowPng
   });
-  return null;
-}
 
-function MapViewUpdater({ location }) {
-  const map = useMapEvents({});
+  const DefaultIcon = L.icon({
+    iconUrl: markerIconPng,
+    shadowUrl: markerShadowPng,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  });
+  L.Marker.prototype.options.icon = DefaultIcon;
 
-  useEffect(() => {
-    if (location) {
-      map.flyTo([location.lat, location.lng], 15);
-    }
-  }, [location, map]);
+  function MapClickHandler({ onLocationPick }) {
+    useMapEvents({
+      click(e) {
+        onLocationPick(e.latlng);
+      },
+    });
+    return null;
+  }
 
-  return null;
-}
+  function MapViewUpdater({ location }) {
+    const map = useMapEvents({});
 
-export default function Location() {
-  const navigate = useNavigate();
-  const draft = getListingDraft();
-  const [search, setSearch] = useState(draft.search || '');
-  const [country, setCountry] = useState(draft.country || '');
-  const [state, setState] = useState(draft.state || '');
-  const [city, setCity] = useState(draft.city || '');
-  const [street, setStreet] = useState(draft.street || '');
-  const [unit, setUnit] = useState(draft.unit || '');
-  const [zip, setZip] = useState(draft.zip || '');
-  const [suggestions, setSuggestions] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const savedLatitude = Number(draft.latitude);
-  const savedLongitude = Number(draft.longitude);
-  const hasSavedLocation = Number.isFinite(savedLatitude) && Number.isFinite(savedLongitude);
-  const defaultCenter = hasSavedLocation ? [savedLatitude, savedLongitude] : [14.5995, 120.9842];
-  const [selectedLocation, setSelectedLocation] = useState(
-    hasSavedLocation ? { lat: savedLatitude, lng: savedLongitude } : null
-  );
-
-  const updateField = (field, setValue) => (event) => {
-    const value = event.target.value;
-    setValue(value);
-    updateListingDraft({ [field]: value });
-  };
-
-  const handleLocationPick = ({ lat, lng }) => {
-    const location = { lat, lng };
-    setSelectedLocation(location);
-    updateListingDraft({ latitude: lat, longitude: lng });
-  };
-
-  useEffect(() => {
-    const query = search.trim();
-    if (query.length < 3) {
-      const timeoutId = window.setTimeout(() => {
-        setSuggestions([]);
-        setIsSearching(false);
-      }, 0);
-      return () => window.clearTimeout(timeoutId);
-    }
-
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(async () => {
-      setIsSearching(true);
-
-      try {
-        const params = new URLSearchParams({
-          q: query,
-          format: 'jsonv2',
-          addressdetails: '1',
-          limit: '5',
-        });
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?${params}`,
-          { signal: controller.signal }
-        );
-
-        if (!response.ok) {
-          throw new Error('Location search failed');
-        }
-
-        setSuggestions(await response.json());
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          setSuggestions([]);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsSearching(false);
-        }
+    useEffect(() => {
+      if (location) {
+        map.flyTo([location.lat, location.lng], 15);
       }
-    }, 400);
+    }, [location, map]);
 
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
+    return null;
+  }
+
+  export default function Location() {
+    const navigate = useNavigate();
+    const draft = getListingDraft();
+    const [search, setSearch] = useState(draft.search || '');
+    const [country, setCountry] = useState(draft.country || '');
+    const [state, setState] = useState(draft.state || '');
+    const [city, setCity] = useState(draft.city || '');
+    const [street, setStreet] = useState(draft.street || '');
+    const [unit, setUnit] = useState(draft.unit || '');
+    const [zip, setZip] = useState(draft.zip || '');
+    const [suggestions, setSuggestions] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const savedLatitude = Number(draft.latitude);
+    const savedLongitude = Number(draft.longitude);
+    const hasSavedLocation = Number.isFinite(savedLatitude) && Number.isFinite(savedLongitude);
+    const defaultCenter = hasSavedLocation ? [savedLatitude, savedLongitude] : [14.5995, 120.9842];
+    const [selectedLocation, setSelectedLocation] = useState(
+      hasSavedLocation ? { lat: savedLatitude, lng: savedLongitude } : null
+    );
+
+    const updateField = (field, setValue) => (event) => {
+      const value = event.target.value;
+      setValue(value);
+      updateListingDraft({ [field]: value });
     };
-  }, [search]);
 
-  const selectSuggestion = (suggestion) => {
-    const address = suggestion.address || {};
-    const nextLocation = {
-      lat: Number(suggestion.lat),
-      lng: Number(suggestion.lon),
-    };
-    const nextFields = {
-      search: suggestion.display_name,
-      street: [address.house_number, address.road].filter(Boolean).join(' '),
-      city: address.city || address.town || address.village || address.municipality || '',
-      state: address.state || address.region || '',
-      country: address.country || '',
-      zip: address.postcode || '',
-      latitude: nextLocation.lat,
-      longitude: nextLocation.lng,
+    const handleLocationPick = ({ lat, lng }) => {
+      const location = { lat, lng };
+      setSelectedLocation(location);
+      updateListingDraft({ latitude: lat, longitude: lng });
     };
 
-    setSearch(nextFields.search);
-    setStreet(nextFields.street);
-    setCity(nextFields.city);
-    setState(nextFields.state);
-    setCountry(nextFields.country);
-    setZip(nextFields.zip);
-    setSelectedLocation(nextLocation);
-    setSuggestions([]);
-    updateListingDraft(nextFields);
-  };
+    useEffect(() => {
+      const query = search.trim();
+      if (query.length < 3) {
+        const timeoutId = window.setTimeout(() => {
+          setSuggestions([]);
+          setIsSearching(false);
+        }, 0);
+        return () => window.clearTimeout(timeoutId);
+      }
 
-  const inputClass =
-    'w-full h-[52px] border border-black rounded-full px-5 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50';
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(async () => {
+        setIsSearching(true);
 
-  return (
-    <div className="min-h-screen bg-white text-black font-sans flex flex-col">
+        try {
+          const params = new URLSearchParams({
+            q: query,
+            format: 'jsonv2',
+            addressdetails: '1',
+            limit: '5',
+          });
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?${params}`,
+            { signal: controller.signal }
+          );
 
-      {/* Header */}
-      <ListingHeader
-        onOpenQuestions={() => console.log('Questions')}
-        onSaveAndExit={() => console.log('Save & Exit')}
-      />
+          if (!response.ok) {
+            throw new Error('Location search failed');
+          }
 
-      {/* Main content */}
-      <main className="flex-1 flex flex-col">
+          setSuggestions(await response.json());
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            setSuggestions([]);
+          }
+        } finally {
+          if (!controller.signal.aborted) {
+            setIsSearching(false);
+          }
+        }
+      }, 400);
 
-        <div className="w-full max-w-[560px] mx-auto pt-10 md:pt-11 px-6">
+      return () => {
+        window.clearTimeout(timeoutId);
+        controller.abort();
+      };
+    }, [search]);
 
-          {/* Heading */}
-          <h1 className="text-center text-[23px] md:text-[24px] font-semibold leading-tight mb-6">
-            Where is your place located?
-          </h1>
+    const selectSuggestion = (suggestion) => {
+      const address = suggestion.address || {};
+      const nextLocation = {
+        lat: Number(suggestion.lat),
+        lng: Number(suggestion.lon),
+      };
+      const nextFields = {
+        search: suggestion.display_name,
+        street: [address.house_number, address.road].filter(Boolean).join(' '),
+        city: address.city || address.town || address.village || address.municipality || '',
+        state: address.state || address.region || '',
+        country: address.country || '',
+        zip: address.postcode || '',
+        latitude: nextLocation.lat,
+        longitude: nextLocation.lng,
+      };
 
-          {/* Search bar */}
-          <div className="relative mb-6">
-            <input
-              type="text"
-              value={search}
-              onChange={updateField('search', setSearch)}
-              placeholder="Search for property or location"
-              className="w-full h-[52px] border border-black rounded-full pl-11 pr-5 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50"
-            />
-            {(isSearching || suggestions.length > 0) && (
-              <div className="absolute z-[1000] left-0 right-0 top-[58px] overflow-hidden rounded-2xl border border-black bg-white shadow-lg">
-                {isSearching && (
-                  <p className="px-5 py-3 text-sm text-neutral-500">Searching locations...</p>
-                )}
-                {!isSearching && suggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.place_id}
-                    type="button"
-                    onClick={() => selectSuggestion(suggestion)}
-                    className="block w-full border-b border-neutral-200 px-5 py-3 text-left text-sm last:border-b-0 hover:bg-neutral-100"
-                  >
-                    {suggestion.display_name}
-                  </button>
-                ))}
-              </div>
-            )}
-            <svg
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-          </div>
+      setSearch(nextFields.search);
+      setStreet(nextFields.street);
+      setCity(nextFields.city);
+      setState(nextFields.state);
+      setCountry(nextFields.country);
+      setZip(nextFields.zip);
+      setSelectedLocation(nextLocation);
+      setSuggestions([]);
+      updateListingDraft(nextFields);
+    };
 
-          {/* Property location fields */}
-          <h2 className="text-[16px] font-semibold mb-3">Property Location</h2>
+    const inputClass =
+      'w-full h-[52px] border border-black rounded-full px-5 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50';
 
-          <div className="space-y-4">
-            <input
-              type="text"
-              value={country}
-              onChange={updateField('country', setCountry)}
-              placeholder="Country or Region"
-              className={inputClass}
-            />
+    return (
+      <div className="min-h-screen bg-white text-black font-sans flex flex-col">
 
-            <div className="flex gap-4">
+        {/* Header */}
+        <ListingHeader
+          onOpenQuestions={() => console.log('Questions')}
+          onSaveAndExit={() => console.log('Save & Exit')}
+        />
+
+        {/* Main content */}
+        <main className="flex-1 flex flex-col">
+
+          <div className="w-full max-w-[560px] mx-auto pt-10 md:pt-11 px-6">
+
+            {/* Heading */}
+            <h1 className="text-center text-[23px] md:text-[24px] font-semibold leading-tight mb-6">
+              Where is your place located?
+            </h1>
+
+            {/* Search bar */}
+            <div className="relative mb-6">
               <input
                 type="text"
-                value={state}
-                onChange={updateField('state', setState)}
-                placeholder="State/Province"
-                className={inputClass}
+                value={search}
+                onChange={updateField('search', setSearch)}
+                placeholder="Search for property or location"
+                className="w-full h-[52px] border border-black rounded-full pl-11 pr-5 text-[15px] placeholder:text-neutral-500 focus:outline-none focus:bg-neutral-50"
               />
-              <input
-                type="text"
-                value={city}
-                onChange={updateField('city', setCity)}
-                placeholder="City"
-                className={inputClass}
-              />
-            </div>
-
-            <input
-              type="text"
-              value={street}
-              onChange={updateField('street', setStreet)}
-              placeholder="Street Address"
-              className={inputClass}
-            />
-
-            <input
-              type="text"
-              value={unit}
-              onChange={updateField('unit', setUnit)}
-              placeholder="Building, Floor or Unit Number (Optional)"
-              className={inputClass}
-            />
-
-            <input
-              type="text"
-              value={zip}
-              onChange={updateField('zip', setZip)}
-              placeholder="ZIP/Postal Code (Optional)"
-              className={inputClass}
-            />
-          </div>
-
-          <div className="mt-6 mb-6 overflow-hidden rounded-[19px] border border-black">
-            <div className="h-[300px]">
-              <MapContainer
-                center={defaultCenter}
-                zoom={hasSavedLocation ? 15 : 12}
-                scrollWheelZoom
-                style={{ height: '100%', width: '100%' }}
+              {(isSearching || suggestions.length > 0) && (
+                <div className="absolute z-[1000] left-0 right-0 top-[58px] overflow-hidden rounded-2xl border border-black bg-white shadow-lg">
+                  {isSearching && (
+                    <p className="px-5 py-3 text-sm text-neutral-500">Searching locations...</p>
+                  )}
+                  {!isSearching && suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.place_id}
+                      type="button"
+                      onClick={() => selectSuggestion(suggestion)}
+                      className="block w-full border-b border-neutral-200 px-5 py-3 text-left text-sm last:border-b-0 hover:bg-neutral-100"
+                    >
+                      {suggestion.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <svg
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
               >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <MapClickHandler onLocationPick={handleLocationPick} />
-                <MapViewUpdater location={selectedLocation} />
-                {selectedLocation && (
-                  <Marker position={[selectedLocation.lat, selectedLocation.lng]} />
-                )}
-              </MapContainer>
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
             </div>
-            <p className="border-t border-black bg-white px-4 py-3 text-[13px] text-neutral-600">
-              {selectedLocation
-                ? `Selected coordinates: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}`
-                : 'Click the map to select the property location.'}
-            </p>
+
+            {/* Property location fields */}
+            <h2 className="text-[16px] font-semibold mb-3">Property Location</h2>
+
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={country}
+                onChange={updateField('country', setCountry)}
+                placeholder="Country or Region"
+                className={inputClass}
+              />
+
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  value={state}
+                  onChange={updateField('state', setState)}
+                  placeholder="State/Province"
+                  className={inputClass}
+                />
+                <input
+                  type="text"
+                  value={city}
+                  onChange={updateField('city', setCity)}
+                  placeholder="City"
+                  className={inputClass}
+                />
+              </div>
+
+              <input
+                type="text"
+                value={street}
+                onChange={updateField('street', setStreet)}
+                placeholder="Street Address"
+                className={inputClass}
+              />
+
+              <input
+                type="text"
+                value={unit}
+                onChange={updateField('unit', setUnit)}
+                placeholder="Building, Floor or Unit Number (Optional)"
+                className={inputClass}
+              />
+
+              <input
+                type="text"
+                value={zip}
+                onChange={updateField('zip', setZip)}
+                placeholder="ZIP/Postal Code (Optional)"
+                className={inputClass}
+              />
+            </div>
+
+            <div className="mt-6 mb-6 overflow-hidden rounded-[19px] border border-black">
+              <div className="h-[300px]">
+                <MapContainer
+                  center={defaultCenter}
+                  zoom={hasSavedLocation ? 15 : 12}
+                  scrollWheelZoom
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <MapClickHandler onLocationPick={handleLocationPick} />
+                  <MapViewUpdater location={selectedLocation} />
+                  {selectedLocation && (
+                    <Marker position={[selectedLocation.lat, selectedLocation.lng]} />
+                  )}
+                </MapContainer>
+              </div>
+              <p className="border-t border-black bg-white px-4 py-3 text-[13px] text-neutral-600">
+                {selectedLocation
+                  ? `Selected coordinates: ${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}`
+                  : 'Click the map to select the property location.'}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Bottom buttons */}
-        <div className="mt-auto flex items-center justify-between px-10 pb-6 pt-8">
+          {/* Bottom buttons */}
+          <div className="mt-auto flex items-center justify-between px-10 pb-6 pt-8">
 
-          {/* Back */}
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="
-              w-[142px] h-[50px]
-              rounded-full
-              border border-black
-              bg-white
-              text-[20px]
-              hover:bg-neutral-100
-              transition
-            "
-          >
-            Back
-          </button>
+            {/* Back */}
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              className="
+                w-[142px] h-[50px]
+                rounded-full
+                border border-black
+                bg-white
+                text-[20px]
+                hover:bg-neutral-100
+                transition
+              "
+            >
+              Back
+            </button>
 
-          {/* Next */}
-          <button
-            type="button"
-            onClick={() => navigate('/host/listing/PlaceRate')}
-            className="
-              w-[142px] h-[50px]
-              rounded-full
-              border border-black
-              bg-black text-white
-              text-[20px]
-              hover:bg-neutral-800
-              transition
-            "
-          >
-            Next
-          </button>
-        </div>
-      </main>
-    </div>
-  );
-}
+            {/* Next */}
+            <button
+              type="button"
+              onClick={() => navigate('/host/listing/PlaceRate')}
+              className="
+                w-[142px] h-[50px]
+                rounded-full
+                border border-black
+                bg-black text-white
+                text-[20px]
+                hover:bg-neutral-800
+                transition
+              "
+            >
+              Continue
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }

@@ -8,6 +8,7 @@ $stmt = $pdo->query(
     "SELECT
         b.building_id,
         b.building_name,
+        b.property_category,
         b.location,
         b.latitude,
         b.longitude,
@@ -50,6 +51,7 @@ $stmt = $pdo->query(
     GROUP BY
         b.building_id,
         b.building_name,
+        b.property_category,
         b.location,
         b.latitude,
         b.longitude,
@@ -67,27 +69,23 @@ $stmt = $pdo->query(
 $listings =
     $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-/*
-|--------------------------------------------------------------------------
-| Convert comma-separated image paths into arrays
-|--------------------------------------------------------------------------
-*/
-
 foreach ($listings as &$listing) {
 
-    if (
-        !empty($listing['images'])
-    ) {
+    if (!empty($listing['images'])) {
+
         $listing['images'] =
             explode(
                 '|||',
                 $listing['images']
             );
+
     } else {
+
         $listing['images'] = [];
     }
 }
 
 unset($listing);
+
 
 echo json_encode($listings);

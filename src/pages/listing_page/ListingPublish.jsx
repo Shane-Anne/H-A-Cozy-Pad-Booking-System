@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import ListingHeader from '../../components/ListingHeader';
+
 import {
   clearListingDraft,
   getListingDraft,
@@ -50,16 +51,27 @@ export default function ListingPublish() {
 
   const draft = getListingDraft();
 
-  // Files sent from PlaceImages.jsx
+  const propertyTypeNames = {
+    entirePlace: 'Entire place',
+    room: 'Room',
+    hostel: 'Hostel shared-room',
+  };
+
+  const propertyType =
+    propertyTypeNames[draft.placeType] ||
+    'Entire place';
+
   const images = location.state?.images || [];
 
   const isEditing = !!draft.editingBuildingId;
 
-  const propertyName = draft.buildingName || 'Property Name';
+  const propertyName =
+    draft.buildingName || 'Property Name';
 
   const propertyPlace =
-    [draft.city, draft.country].filter(Boolean).join(', ') ||
-    'Property Place';
+    [draft.city, draft.country]
+      .filter(Boolean)
+      .join(', ') || 'Property Place';
 
   const [agreed, setAgreed] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -67,12 +79,16 @@ export default function ListingPublish() {
 
   const publishListing = async () => {
     if (!agreed) {
-      setError('Please accept the Terms and Conditions.');
+      setError(
+        'Please accept the Terms and Conditions.'
+      );
       return;
     }
 
     if (!isEditing && images.length === 0) {
-      setError('Please upload at least one property image.');
+      setError(
+        'Please upload at least one property image.'
+      );
       return;
     }
 
@@ -103,6 +119,11 @@ export default function ListingPublish() {
       );
 
       formData.append(
+        'propertyCategory',
+        draft.propertyCategory || 'home'
+      );
+
+      formData.append(
         'location',
         fullLocation
       );
@@ -129,7 +150,7 @@ export default function ListingPublish() {
 
       formData.append(
         'unitName',
-        'Entire place'
+        propertyType
       );
 
       formData.append(
@@ -142,20 +163,21 @@ export default function ListingPublish() {
         draft.maxGuests || ''
       );
 
+
       formData.append(
         'ratePerNight',
         draft.ratePerNight || ''
       );
 
-      // Amenities
-      (draft.amenities || []).forEach((amenity) => {
-        formData.append(
-          'amenities[]',
-          amenity
-        );
-      });
+      (draft.amenities || []).forEach(
+        (amenity) => {
+          formData.append(
+            'amenities[]',
+            amenity
+          );
+        }
+      );
 
-      // Property images
       images.forEach((image) => {
         formData.append(
           'images[]',
@@ -181,7 +203,7 @@ export default function ListingPublish() {
       if (!response.ok) {
         throw new Error(
           result.error ||
-          'Unable to publish listing'
+            'Unable to publish listing'
         );
       }
 
@@ -192,7 +214,7 @@ export default function ListingPublish() {
     } catch (publishError) {
       setError(
         publishError.message ||
-        'Unable to publish listing.'
+          'Unable to publish listing.'
       );
 
       setIsPublishing(false);
@@ -204,8 +226,12 @@ export default function ListingPublish() {
 
       {/* Header */}
       <ListingHeader
-        onOpenQuestions={() => console.log('Questions')}
-        onSaveAndExit={() => console.log('Save & Exit')}
+        onOpenQuestions={() =>
+          console.log('Questions')
+        }
+        onSaveAndExit={() =>
+          console.log('Save & Exit')
+        }
       />
 
       {/* Main */}
@@ -226,6 +252,7 @@ export default function ListingPublish() {
             </div>
 
             <div>
+
               <p className="text-[15px] font-semibold leading-tight">
                 {propertyName}
               </p>
@@ -238,6 +265,11 @@ export default function ListingPublish() {
                 </p>
               </div>
 
+              {/* Place type */}
+              <p className="text-[12px] text-neutral-500 mt-1">
+                {propertyType}
+              </p>
+
               <p className="text-[12px] text-neutral-500 mt-1">
                 {images.length}{' '}
                 {images.length === 1
@@ -245,6 +277,7 @@ export default function ListingPublish() {
                   : 'photos'}{' '}
                 selected
               </p>
+
             </div>
 
           </div>
