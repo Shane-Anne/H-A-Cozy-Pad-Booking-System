@@ -4,7 +4,8 @@ import { API_BASE_URL } from './lib/api';
 
 import AuthModal from './components/AuthModal';
 import RegisterModal from './components/RegisterModal';
-import HelpCenter from './pages/HelpCenter';
+import HelpCenter from './pages/faq_page/HelpCenter';
+import FaqManagement from './pages/faq_page/FaqManagement';
 import Profile from './pages/Profile';
 import Trips from './pages/Trips';
 
@@ -116,6 +117,7 @@ export default function App() {
           <Route path="/host/listings" element={<DashboardListings />} />
           <Route path="/host/reservations" element={<DashboardReservations />} /> 
           <Route path="/host/calendar" element={<DashboardCalendar />} />
+          <Route path="/host/faqs" element={<FaqManagement />} />
           <Route path="/host/listing" element={<UnitListing />} />
           <Route path="/host/listing/PropertyDescription" element={<PropertyDescription />} />
           <Route path="/host/listing/PlaceDescription" element={<PlaceDescription />} />
@@ -128,7 +130,7 @@ export default function App() {
         </Route>
         
 
-        <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['customer']} />}>
+        <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['customer', 'admin', 'assistant']} />}>
           <Route path="/help"
             element={
               <HelpCenter

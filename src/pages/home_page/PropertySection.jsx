@@ -58,7 +58,7 @@ export default function PropertySection({ title, properties = [] }) {
                 <div className="mt-3">
                   <div className="flex justify-between items-start gap-2">
                     <h3 className="text-xl lg:text-2xl font-normal leading-tight">
-                      {property.unit_name}
+                      {property.building_name}
                     </h3>
                     {property.max_guests && (
                       <span className="text-xs bg-neutral-200 text-neutral-700 px-2 py-1 rounded-full whitespace-nowrap">
@@ -68,7 +68,7 @@ export default function PropertySection({ title, properties = [] }) {
                   </div>
 
                   <p className="text-base text-neutral-500 mt-0.5">
-                    {property.building_name} • {property.location}
+                    {property.unit_name} • {property.location}
                   </p>
 
                   <p className="text-lg lg:text-xl font-light mt-1">

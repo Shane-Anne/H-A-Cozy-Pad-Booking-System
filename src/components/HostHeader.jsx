@@ -102,9 +102,9 @@ export default function HostHeader({ activeNav = 'Today' }) {
             Profile
           </Link>
           <hr className="my-2 border-neutral-200" />
-          <Link to="/help" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 text-black no-underline">
+          <Link to="/host/faqs" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 text-black no-underline">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            Help Center
+            Help Center Management
           </Link>
           <hr className="my-2 border-neutral-200" />
           <Link to="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-semibold hover:bg-neutral-100 text-black no-underline">
