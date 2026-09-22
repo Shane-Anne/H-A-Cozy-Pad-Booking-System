@@ -28,7 +28,6 @@ const PLACEHOLDER_AMENITIES = Array.from(
   })
 );
 
-
 const PLACEHOLDER_CATEGORIES = [
   'Category',
   'Category',
@@ -106,8 +105,10 @@ export default function PropertyDetail({
   const [availabilityError, setAvailabilityError] =
     useState('');
 
-  const navigate = useNavigate();
+  // Selected image index for the full-screen viewer
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -157,7 +158,6 @@ export default function PropertyDetail({
     };
   }, []);
 
-
   const selectedUnitId =
     unitId ?? routeUnitId;
 
@@ -184,7 +184,7 @@ export default function PropertyDetail({
           : PLACEHOLDER_AMENITIES.slice(0, 8)
       );
 
-
+  // All uploaded images
   const propertyImages = Array.isArray(unit?.images)
     ? unit.images.filter(Boolean)
     : [];
@@ -252,8 +252,6 @@ export default function PropertyDetail({
       controller.abort();
   }, [unit, checkIn, checkOut]);
 
-  
-
   const handleReserve = () => {
     if (
       !unit ||
@@ -275,13 +273,10 @@ export default function PropertyDetail({
     );
   };
 
-
-
   const visibleReviews =
     showAllComments
       ? PLACEHOLDER_REVIEWS
       : PLACEHOLDER_REVIEWS.slice(0, 6);
-
 
   return (
     <div className="bg-white text-black font-sans min-h-screen flex flex-col">
@@ -339,25 +334,34 @@ export default function PropertyDetail({
               </p>
             </div>
 
-     
+            {/* =====================================================
+                IMAGE GALLERY + MAP
+            ====================================================== */}
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
 
-
-
+              {/* Image Gallery */}
               <div className="grid grid-cols-2 gap-3">
 
                 {/* Main image */}
                 <div className="col-span-2 h-56 md:h-72 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
 
                   {propertyImages[0] ? (
-                    <img
-                      src={`${API_BASE_URL}/${propertyImages[0]}`}
-                      alt={
-                        unit.building_name
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedImageIndex(0)
                       }
-                      className="w-full h-full object-cover"
-                    />
+                      className="w-full h-full cursor-pointer"
+                    >
+                      <img
+                        src={`${API_BASE_URL}/${propertyImages[0]}`}
+                        alt={
+                          unit.building_name
+                        }
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                      />
+                    </button>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-neutral-400">
                       No image
@@ -370,11 +374,19 @@ export default function PropertyDetail({
                 <div className="h-28 md:h-32 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
 
                   {propertyImages[1] ? (
-                    <img
-                      src={`${API_BASE_URL}/${propertyImages[1]}`}
-                      alt={`${unit.building_name} image 2`}
-                      className="w-full h-full object-cover"
-                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedImageIndex(1)
+                      }
+                      className="w-full h-full cursor-pointer"
+                    >
+                      <img
+                        src={`${API_BASE_URL}/${propertyImages[1]}`}
+                        alt={`${unit.building_name} image 2`}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                      />
+                    </button>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-neutral-400">
                       No image
@@ -387,11 +399,19 @@ export default function PropertyDetail({
                 <div className="h-28 md:h-32 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
 
                   {propertyImages[2] ? (
-                    <img
-                      src={`${API_BASE_URL}/${propertyImages[2]}`}
-                      alt={`${unit.building_name} image 3`}
-                      className="w-full h-full object-cover"
-                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedImageIndex(2)
+                      }
+                      className="w-full h-full cursor-pointer"
+                    >
+                      <img
+                        src={`${API_BASE_URL}/${propertyImages[2]}`}
+                        alt={`${unit.building_name} image 3`}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                      />
+                    </button>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-neutral-400">
                       No image
@@ -402,7 +422,7 @@ export default function PropertyDetail({
 
               </div>
 
-
+              {/* Map */}
               <div className="h-56 lg:h-full min-h-[220px] overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
 
                 {Number.isFinite(
@@ -444,7 +464,9 @@ export default function PropertyDetail({
 
             </div>
 
-
+            {/* =====================================================
+                DETAILS + BOOKING
+            ====================================================== */}
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-8">
 
@@ -593,6 +615,10 @@ export default function PropertyDetail({
 
             <hr className="border-neutral-200" />
 
+            {/* =====================================================
+                AMENITIES
+            ====================================================== */}
+
             <section>
 
               <h2 className="text-xl font-bold mb-5">
@@ -638,7 +664,9 @@ export default function PropertyDetail({
 
             <hr className="border-neutral-200" />
 
-
+            {/* =====================================================
+                REVIEWS
+            ====================================================== */}
 
             <section>
 
@@ -736,6 +764,90 @@ export default function PropertyDetail({
 
       <Footer />
       <Chatbot />
+
+      {/* =========================================================
+          FULL-SCREEN IMAGE VIEWER
+      ========================================================== */}
+
+      {selectedImageIndex !== null &&
+        propertyImages.length > 0 && (
+          <div
+            className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setSelectedImageIndex(null)}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setSelectedImageIndex(null);
+              }}
+              className="absolute top-5 right-5 z-30 w-11 h-10 rounded-full bg-white/90 text-black text-3xl leading-none flex items-center justify-center hover:bg-white cursor-pointer"
+              aria-label="Close image"
+            >
+              ×
+            </button>
+
+            {/* Previous image */}
+            {propertyImages.length > 1 && (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+
+                  setSelectedImageIndex((currentIndex) => {
+                    if (currentIndex === null) return 0;
+
+                    return currentIndex === 0
+                      ? propertyImages.length - 1
+                      : currentIndex - 1;
+                  });
+                }}
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 text-black text-4xl leading-none flex items-center justify-center hover:bg-white cursor-pointer shadow-lg"
+                aria-label="Previous image"
+              >
+                &lsaquo;
+              </button>
+            )}
+
+            {/* Full image */}
+            <img
+              src={`${API_BASE_URL}/${propertyImages[selectedImageIndex]}`}
+              alt={`${unit?.building_name || 'Property'} image ${
+                selectedImageIndex + 1
+              }`}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+              onClick={(event) => event.stopPropagation()}
+            />
+
+            {/* Next image */}
+            {propertyImages.length > 1 && (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+
+                  setSelectedImageIndex((currentIndex) => {
+                    if (currentIndex === null) return 0;
+
+                    return currentIndex === propertyImages.length - 1
+                      ? 0
+                      : currentIndex + 1;
+                  });
+                }}
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 text-black text-4xl leading-none flex items-center justify-center hover:bg-white cursor-pointer shadow-lg"
+                aria-label="Next image"
+              >
+                ›
+              </button>
+            )}
+
+            {/* Image counter */}
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 bg-black/60 text-white px-4 py-2 rounded-full text-sm">
+              {selectedImageIndex + 1} / {propertyImages.length}
+            </div>
+          </div>
+        )}
 
     </div>
   );
