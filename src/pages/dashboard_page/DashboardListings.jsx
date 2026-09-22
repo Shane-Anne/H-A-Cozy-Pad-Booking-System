@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import HostHeader from '../../components/HostHeader';
 import { API_BASE_URL } from '../../lib/api';
+import {
+  clearListingDraft,
+} from '../../lib/listingDraft';
 import { useNavigate } from 'react-router-dom';
 
 export default function DashboardListings() {
@@ -38,8 +41,12 @@ export default function DashboardListings() {
     try {
       const response = await fetch(`${API_BASE_URL}/delete_listing.php`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ buildingId: selectedBuildingId }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          buildingId: selectedBuildingId,
+        }),
       });
 
       const data = await response.json();
@@ -92,13 +99,25 @@ export default function DashboardListings() {
       });
   }, []);
 
+  const handleAddListing = () => {
+    // Remove the previous listing's selections
+    // so the new listing starts completely fresh.
+    clearListingDraft();
+
+    setSelectedBuildingId(null);
+
+    navigate('/host/listing');
+  };
+
   return (
     <div className="bg-white text-black font-sans min-h-screen">
       <HostHeader activeNav="Listing" />
 
       <main className="px-5 md:px-10 lg:px-[52px] py-10">
         <div className="flex items-center justify-between mb-10">
-          <h1 className="text-4xl font-bold">Your Listing</h1>
+          <h1 className="text-4xl font-bold">
+            Your Listing
+          </h1>
 
           <div className="flex gap-3">
             <button
@@ -115,7 +134,9 @@ export default function DashboardListings() {
               disabled={!selectedBuildingId}
               onClick={() => {
                 if (window.confirm('Edit this listing?')) {
-                  navigate(`/host/listing?edit=${selectedBuildingId}`);
+                  navigate(
+                    `/host/listing?edit=${selectedBuildingId}`
+                  );
                 }
               }}
               className="px-6 py-2.5 text-base font-medium border border-neutral-300 rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
@@ -125,7 +146,7 @@ export default function DashboardListings() {
 
             <button
               type="button"
-              onClick={() => navigate('/host/listing')}
+              onClick={handleAddListing}
               className="px-6 py-2.5 text-base font-medium border border-neutral-300 rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer"
             >
               Add
@@ -139,7 +160,10 @@ export default function DashboardListings() {
           <p className="text-red-600">{error}</p>
         ) : listings.length === 0 ? (
           <div className="py-20 text-center text-neutral-500">
-            <p className="text-2xl font-medium">No listings yet</p>
+            <p className="text-2xl font-medium">
+              No listings yet
+            </p>
+
             <p className="mt-2">
               Add your first housing listing to see it here.
             </p>
@@ -199,7 +223,13 @@ export default function DashboardListings() {
                             height="18"
                             rx="2"
                           />
-                          <circle cx="9" cy="9" r="2" />
+
+                          <circle
+                            cx="9"
+                            cy="9"
+                            r="2"
+                          />
+
                           <path d="M21 15l-5-5L5 21" />
                         </svg>
                       </div>
@@ -210,7 +240,6 @@ export default function DashboardListings() {
                     </div>
                   </td>
 
-                  {/* PROPERTY CATEGORY */}
                   <td className="py-4 text-base align-middle">
                     {getPropertyCategoryLabel(
                       listing.property_category
