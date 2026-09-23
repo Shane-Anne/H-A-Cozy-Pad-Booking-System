@@ -37,15 +37,14 @@ if (!in_array($status, ['confirmed', 'rejected'], true)) {
 $stmt = $pdo->prepare(
     'UPDATE bookings
      SET status = ?
-     WHERE booking_id = ?
-       AND status IN ("pending", "awaiting_payment", "payment_review")'
+     WHERE booking_id = ?'
 );
 
 $stmt->execute([$status, $bookingId]);
 
 if ($stmt->rowCount() === 0) {
     http_response_code(404);
-    echo json_encode(['error' => 'Booking not found or already processed']);
+    echo json_encode(['error' => 'Booking not found or no changes were made']);
     exit;
 }
 
