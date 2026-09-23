@@ -92,6 +92,19 @@ export default function HostHeader({ activeNav = 'Today' }) {
             </Link>
           </li>
 
+          <li>
+            <Link
+              to="/host/faqs"
+              className={`text-lg ${
+                activeNav === 'FAQ'
+                  ? 'font-semibold border-b-2 border-black pb-1 text-black'
+                  : 'text-neutral-600 hover:text-black'
+              }`}
+            >
+              FAQ
+            </Link>
+          </li>
+
           {isAdmin && (
             <li>
               <Link
