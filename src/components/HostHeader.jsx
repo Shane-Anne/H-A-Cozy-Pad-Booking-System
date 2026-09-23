@@ -1,10 +1,31 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../lib/api';
 
 export default function HostHeader({ activeNav = 'Today' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/check_auth.php`, {
+      credentials: 'include',
+      cache: 'no-store',
+    })
+      .then(async (response) => {
+        const data = await response.json();
+
+        if (!response.ok) {
+          return;
+        }
+
+        setIsAdmin(data.user?.role === 'admin');
+      })
+      .catch(() => {
+        setIsAdmin(false);
+      });
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -18,7 +39,9 @@ export default function HostHeader({ activeNav = 'Today' }) {
         setIsMenuOpen(false);
       }
     }
+
     document.addEventListener('click', handleClickOutside);
+
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isMenuOpen]);
 
@@ -42,6 +65,7 @@ export default function HostHeader({ activeNav = 'Today' }) {
               Today
             </Link>
           </li>
+
           <li>
             <Link
               to="/host/calendar"
@@ -54,6 +78,7 @@ export default function HostHeader({ activeNav = 'Today' }) {
               Calendar
             </Link>
           </li>
+
           <li>
             <Link
               to="/host/listings"
@@ -66,6 +91,21 @@ export default function HostHeader({ activeNav = 'Today' }) {
               Listing
             </Link>
           </li>
+
+          {isAdmin && (
+            <li>
+              <Link
+                to="/host/users"
+                className={`text-lg ${
+                  activeNav === 'Users'
+                    ? 'font-semibold border-b-2 border-black pb-1 text-black'
+                    : 'text-neutral-600 hover:text-black'
+                }`}
+              >
+                Users
+              </Link>
+            </li>
+          )}
         </ul>
       </nav>
 
@@ -76,6 +116,7 @@ export default function HostHeader({ activeNav = 'Today' }) {
             <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
           </svg>
         </div>
+
         <button
           ref={buttonRef}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -87,7 +128,6 @@ export default function HostHeader({ activeNav = 'Today' }) {
         </button>
       </div>
 
-      {/* Sidebar Menu */}
       {isMenuOpen && (
         <div
           ref={menuRef}
@@ -97,16 +137,21 @@ export default function HostHeader({ activeNav = 'Today' }) {
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/></svg>
             Switch to guest
           </Link>
+
           <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 text-black no-underline">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8-2 8 6"/></svg>
             Profile
           </Link>
+
           <hr className="my-2 border-neutral-200" />
+
           <Link to="/host/faqs" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 text-black no-underline">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             Help Center Management
           </Link>
+
           <hr className="my-2 border-neutral-200" />
+
           <Link to="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-semibold hover:bg-neutral-100 text-black no-underline">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
             Log out
