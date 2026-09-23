@@ -9,6 +9,10 @@ export default function DashboardReservations() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [updatingBookingId, setUpdatingBookingId] = useState(null);
+  const [statusChange, setStatusChange] = useState(null);
+  const [customerInfo, setCustomerInfo] = useState(null);
+  const [isCustomerLoading, setIsCustomerLoading] = useState(false);
+  const [customerError, setCustomerError] = useState('');
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/reservations.php`, { credentials: 'include' })
@@ -59,19 +63,48 @@ export default function DashboardReservations() {
     }
   };
 
+  const handleViewCustomer = async (bookingId) => {
+      setCustomerInfo(null);
+      setCustomerError('');
+      setIsCustomerLoading(true);
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/get_customer.php?bookingId=${bookingId}`,
+          { credentials: 'include' }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Unable to load customer information');
+        }
+
+        setCustomerInfo(data.customer);
+      } catch (customerLoadError) {
+        setCustomerError(customerLoadError.message);
+      } finally {
+        setIsCustomerLoading(false);
+      }
+    };
+
   const activeReservations = reservations.filter(
-    (reservation) => !['cancelled', 'rejected'].includes(reservation.status)
+    (reservation) => reservation.status !== 'cancelled'
   );
 
   const visibleReservations = reservations.filter((reservation) => {
-    const start = new Date(`${reservation.check_in_date}T00:00:00`);
-    const end = new Date(`${reservation.check_out_date}T00:00:00`);
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    if (['cancelled', 'rejected'].includes(reservation.status)) return false;
-    if (activeTab === 'today') return start <= now && end > now;
-    if (activeTab === 'soon') return start > now;
-    return true;
+      const start = new Date(`${reservation.check_in_date}T00:00:00`);
+      const end = new Date(`${reservation.check_out_date}T00:00:00`);
+      const now = new Date();
+
+      if (activeTab === 'all') return true;
+
+      if (reservation.status === 'cancelled') return false;
+
+      if (activeTab === 'today') return start <= now && end > now;
+      if (activeTab === 'soon') return start > now;
+
+      return true;
   });
 
   const formatDate = (date) => new Date(`${date}T00:00:00`).toLocaleDateString('en-PH', {
@@ -138,8 +171,14 @@ export default function DashboardReservations() {
         ) : visibleReservations.length > 0 ? (
           <div className="grid w-full max-w-6xl grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] justify-items-center gap-6">
             {visibleReservations.map((reservation) => {
-              const canDecide = ['pending', 'awaiting_payment', 'payment_review'].includes(reservation.status);
               const isUpdating = updatingBookingId === reservation.booking_id;
+              const canDecide = [
+                'pending',
+                'awaiting_payment',
+                'payment_review',
+                'confirmed',
+                'rejected',
+              ].includes(reservation.status);
 
               return (
                 <article key={reservation.booking_id} className="w-full max-w-[390px] rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
@@ -183,21 +222,52 @@ export default function DashboardReservations() {
                     <div className="mt-5 flex justify-end gap-3 border-t border-neutral-100 pt-4">
                       <button
                         type="button"
-                        disabled={isUpdating}
-                        onClick={() => handleStatusUpdate(reservation.booking_id, 'rejected')}
-                        className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={() => handleViewCustomer(reservation.booking_id)}
+                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                       >
-                        {isUpdating ? 'Updating...' : 'Reject'}
+                        View Customer
                       </button>
+                      {reservation.status !== 'confirmed' && (
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => {
+                            if (['pending', 'awaiting_payment', 'payment_review'].includes(reservation.status)) {
+                              handleStatusUpdate(reservation.booking_id, 'confirmed');
+                            } else {
+                              setStatusChange({
+                                bookingId: reservation.booking_id,
+                                currentStatus: reservation.status,
+                                newStatus: 'confirmed',
+                              });
+                            }
+                          }}
+                          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isUpdating ? 'Updating...' : 'Approve'}
+                        </button>
+                      )}
 
-                      <button
-                        type="button"
-                        disabled={isUpdating}
-                        onClick={() => handleStatusUpdate(reservation.booking_id, 'confirmed')}
-                        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {isUpdating ? 'Updating...' : 'Approve'}
-                      </button>
+                      {reservation.status !== 'rejected' && (
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => {
+                            if (['pending', 'awaiting_payment', 'payment_review'].includes(reservation.status)) {
+                              handleStatusUpdate(reservation.booking_id, 'rejected');
+                            } else {
+                              setStatusChange({
+                                bookingId: reservation.booking_id,
+                                currentStatus: reservation.status,
+                                newStatus: 'rejected',
+                              });
+                            }
+                          }}
+                          className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isUpdating ? 'Updating...' : 'Reject'}
+                        </button>
+                      )}
                     </div>
                   )}
                 </article>
@@ -213,6 +283,104 @@ export default function DashboardReservations() {
           </div>
         )}
       </main>
+      {statusChange && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-neutral-900">
+              Change Booking Status
+            </h2>
+
+            <p className="mt-3 text-sm text-neutral-600">
+              Are you sure you want to change this booking from{' '}
+              <span className="font-semibold capitalize">
+                {statusChange.currentStatus.replace('_', ' ')}
+              </span>{' '}
+              to{' '}
+              <span className="font-semibold capitalize">
+                {statusChange.newStatus}
+              </span>
+              ?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setStatusChange(null)}
+                disabled={updatingBookingId === statusChange.bookingId}
+                className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleStatusUpdate(
+                    statusChange.bookingId,
+                    statusChange.newStatus
+                  );
+                  setStatusChange(null);
+                }}
+                disabled={updatingBookingId === statusChange.bookingId}
+                className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {updatingBookingId === statusChange.bookingId
+                  ? 'Updating...'
+                  : 'Yes, change'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+       {(customerInfo || isCustomerLoading || customerError) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-neutral-900">
+              Customer Information
+            </h2>
+
+            {isCustomerLoading ? (
+              <p className="mt-5 text-sm text-neutral-500">
+                Loading customer information...
+              </p>
+            ) : customerError ? (
+              <p className="mt-5 text-sm text-red-600">
+                {customerError}
+              </p>
+            ) : customerInfo ? (
+              <div className="mt-5 space-y-4 text-sm">
+                <div>
+                  <p className="font-semibold text-neutral-900">Full Name</p>
+                  <p className="text-neutral-600">{customerInfo.fullName}</p>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-neutral-900">Contact Number</p>
+                  <p className="text-neutral-600">{customerInfo.contactNum}</p>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-neutral-900">Email</p>
+                  <p className="text-neutral-600">{customerInfo.email}</p>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerInfo(null);
+                  setCustomerError('');
+                }}
+                className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
