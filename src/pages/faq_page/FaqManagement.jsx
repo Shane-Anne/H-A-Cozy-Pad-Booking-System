@@ -92,7 +92,7 @@ export default function FaqManagement() {
 
   return (
     <div className="bg-white text-black font-sans min-h-screen">
-      <HostHeader />
+      <HostHeader activeNav="FAQ" />
       <main className="px-5 md:px-10 lg:px-[52px] py-10">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-8">
           <div><h1 className="text-4xl font-bold">FAQ Options</h1></div>
