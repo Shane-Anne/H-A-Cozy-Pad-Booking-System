@@ -37,6 +37,9 @@ try {
     $stmt = $pdo->prepare(
         'SELECT
             b.booking_id,
+            b.status,
+            b.cancellation_reason,
+            b.cancelled_at,
             cp.customer_id,
             usr.user_id,
             usr.full_name,
@@ -46,7 +49,14 @@ try {
             bd.guest_contact_num,
             bd.valid_id_path,
             bd.vehicle_type,
-            bd.special_requests
+            bd.special_requests,
+            p.payment_id,
+            p.amount,
+            p.payment_method,
+            p.proof_of_payment,
+            p.payment_status,
+            p.verified_by,
+            p.verified_at
 
          FROM bookings b
 
@@ -58,6 +68,9 @@ try {
 
          LEFT JOIN booking_details bd
             ON bd.booking_id = b.booking_id
+
+         LEFT JOIN payments p
+            ON p.booking_id = b.booking_id
 
          WHERE b.booking_id = ?'
     );
@@ -78,6 +91,9 @@ try {
         'success' => true,
         'customer' => [
             'bookingId' => (int) $customer['booking_id'],
+            'bookingStatus' => $customer['status'],
+            'cancellationReason' => $customer['cancellation_reason'],
+            'cancelledAt' => $customer['cancelled_at'],
             'customerId' => (int) $customer['customer_id'],
             'userId' => (int) $customer['user_id'],
             'fullName' => $customer['full_name'],
@@ -88,6 +104,13 @@ try {
             'validIdPath' => $customer['valid_id_path'],
             'vehicleType' => $customer['vehicle_type'],
             'specialRequests' => $customer['special_requests'],
+            'paymentId' => $customer['payment_id'] ? (int) $customer['payment_id'] : null,
+            'paymentAmount' => $customer['amount'] !== null ? (float) $customer['amount'] : null,
+            'paymentMethod' => $customer['payment_method'],
+            'proofOfPaymentPath' => $customer['proof_of_payment'],
+            'paymentStatus' => $customer['payment_status'],
+            'verifiedBy' => $customer['verified_by'] ? (int) $customer['verified_by'] : null,
+            'verifiedAt' => $customer['verified_at'],
         ]
     ]);
 } catch (Throwable $error) {
