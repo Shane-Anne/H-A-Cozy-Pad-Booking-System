@@ -30,8 +30,6 @@ export default function Trips() {
 
         const data = await response.json();
 
-        console.log("Trips API response:", data);
-
         if (!response.ok) {
           throw new Error(data.error || "Unable to load trips");
         }
@@ -73,8 +71,16 @@ export default function Trips() {
         }
       );
 
-      const data = await response.json();
+      const responseText = await response.text();
 
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error("The server returned an invalid response.");
+      }
+      
       if (!response.ok) {
         throw new Error(data.error || "Unable to cancel booking");
       }
@@ -85,6 +91,7 @@ export default function Trips() {
             ? {
                 ...booking,
                 status: "cancelled",
+                cancellationReason: data.cancellationReason,
               }
             : booking
         )
@@ -106,7 +113,6 @@ export default function Trips() {
   return (
     <main className="min-h-screen bg-white px-5 py-12 text-black md:px-10">
       <div className="mx-auto max-w-2xl">
-
         <button
           type="button"
           onClick={() => navigate("/")}
@@ -146,9 +152,7 @@ export default function Trips() {
                   ? "border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600"
                   : "border-yellow-500 bg-white text-yellow-600"
               }`}
-              onClick={() => {
-                // Request change action
-              }}
+              onClick={() => {}}
             >
               Request to change
             </button>
@@ -191,7 +195,6 @@ export default function Trips() {
                 }`}
               >
                 <div className="flex items-center gap-4">
-
                   <input
                     type="radio"
                     name="selectedBooking"
@@ -303,9 +306,7 @@ export default function Trips() {
             </div>
           </div>
         )}
-
       </div>
-
     </main>
   );
 }
