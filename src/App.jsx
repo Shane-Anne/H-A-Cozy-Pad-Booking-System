@@ -12,10 +12,12 @@ import Trips from './pages/Trips';
 import ListedProperty from './pages/ListedProperty';
 import ProtectedRoute from './components/ProtectedRoute';
 
-//dashboard pages
+// dashboard pages
 import DashboardListings from './pages/dashboard_page/DashboardListings';
 import DashboardReservations from './pages/dashboard_page/DashboardReservations';
 import DashboardCalendar from './pages/dashboard_page/DashboardCalendar';
+import UserManagement from './pages/dashboard_page/UserManagement';
+
 // home page
 import HomePage from './pages/home_page/HomePage';
 
@@ -82,7 +84,8 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" 
+        <Route
+          path="/"
           element={
             <HomePage
               isMenuOpen={isMenuOpen}
@@ -94,8 +97,9 @@ export default function App() {
             />
           }
         />
-        
-        <Route path="/property/:unitId"
+
+        <Route
+          path="/property/:unitId"
           element={
             <ListedProperty
               isMenuOpen={isMenuOpen}
@@ -111,65 +115,118 @@ export default function App() {
         <Route element={<ProtectedRoute user={user} isLoading={isLoading} />}>
           <Route path="/profile" element={<Profile user={user} />} />
         </Route>
-      
-    
-        <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['admin', 'assistant']} />}>
+
+        <Route
+          element={
+            <ProtectedRoute
+              user={user}
+              isLoading={isLoading}
+              allowedRoles={['admin', 'assistant']}
+            />
+          }
+        >
           <Route path="/host/listings" element={<DashboardListings />} />
-          <Route path="/host/reservations" element={<DashboardReservations />} /> 
+          <Route path="/host/reservations" element={<DashboardReservations />} />
           <Route path="/host/calendar" element={<DashboardCalendar />} />
           <Route path="/host/faqs" element={<FaqManagement />} />
           <Route path="/host/listing" element={<UnitListing />} />
-          <Route path="/host/listing/PropertyDescription" element={<PropertyDescription />} />
-          <Route path="/host/listing/PlaceDescription" element={<PlaceDescription />} />
-          <Route path="/host/listing/PlaceOffer" element={<PlaceOffer />} />
-          <Route path="/host/listing/PlaceLocation" element={<PlaceLocation />} />
-          <Route path="/host/listing/PlaceRate" element={<PlaceRate />} />
-          <Route path="/host/listing/PlaceDiscount" element={<PlaceDiscount />} />
-          <Route path="/host/listing/PlaceDetail" element={<PlaceDetail />} />
-          <Route path="/host/listing/ListingPublish" element={<ListingPublish />} />
+          <Route
+            path="/host/listing/PropertyDescription"
+            element={<PropertyDescription />}
+          />
+          <Route
+            path="/host/listing/PlaceDescription"
+            element={<PlaceDescription />}
+          />
+          <Route
+            path="/host/listing/PlaceOffer"
+            element={<PlaceOffer />}
+          />
+          <Route
+            path="/host/listing/PlaceLocation"
+            element={<PlaceLocation />}
+          />
+          <Route
+            path="/host/listing/PlaceRate"
+            element={<PlaceRate />}
+          />
+          <Route
+            path="/host/listing/PlaceDiscount"
+            element={<PlaceDiscount />}
+          />
+          <Route
+            path="/host/listing/PlaceDetail"
+            element={<PlaceDetail />}
+          />
+          <Route
+            path="/host/listing/ListingPublish"
+            element={<ListingPublish />}
+          />
         </Route>
-        
 
-        <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['customer', 'admin', 'assistant']} />}>
-          <Route path="/help"
+        <Route
+          element={
+            <ProtectedRoute
+              user={user}
+              isLoading={isLoading}
+              allowedRoles={['admin']}
+            />
+          }
+        >
+          <Route path="/host/users" element={<UserManagement />} />
+        </Route>
+        <Route
+          path="/help"
+          element={
+            <HelpCenter
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              user={user}
+              onLogout={() => setUser(null)}
+              onOpenSignIn={handleOpenAuth}
+              onOpenRegister={handleOpenRegister}
+              onOpenChat={() => setIsChatOpen(true)}
+            />
+          }
+        />
+
+        <Route
+          element={
+            <ProtectedRoute
+              user={user}
+              isLoading={isLoading}
+              allowedRoles={['customer', 'admin', 'assistant']}
+            />
+          }
+        >
+          <Route path="/trips" element={<Trips />} />
+
+          <Route
+            path="/booking-confirmation"
             element={
-              <HelpCenter
-                isMenuOpen={isMenuOpen}
-                setIsMenuOpen={setIsMenuOpen}
+              <BookingConfirmation
                 user={user}
                 onLogout={() => setUser(null)}
+                isMenuOpen={isMenuOpen}
+                setIsMenuOpen={setIsMenuOpen}
                 onOpenSignIn={handleOpenAuth}
                 onOpenRegister={handleOpenRegister}
-                onOpenChat={() => setIsChatOpen(true)}
               />
-            }   
+            }
           />
-          <Route path="/trips" element={<Trips />} />
+
           <Route
-              path="/booking-confirmation"
-              element={
-                <BookingConfirmation
-                  user={user}
-                  onLogout={() => setUser(null)}
-                  isMenuOpen={isMenuOpen}
-                  setIsMenuOpen={setIsMenuOpen}
-                  onOpenSignIn={handleOpenAuth}
-                  onOpenRegister={handleOpenRegister}
-                />
-              }
-          />
-          <Route
-              path="/booking-confirmation-2"
-              element={
-                <BookingConfirmation2
-                  user={user}
-                  onLogout={() => setUser(null)}
-                  isMenuOpen={isMenuOpen}
-                  setIsMenuOpen={setIsMenuOpen}
-                  onOpenSignIn={handleOpenAuth}
-                  onOpenRegister={handleOpenRegister}
-                />
-              }
+            path="/booking-confirmation-2"
+            element={
+              <BookingConfirmation2
+                user={user}
+                onLogout={() => setUser(null)}
+                isMenuOpen={isMenuOpen}
+                setIsMenuOpen={setIsMenuOpen}
+                onOpenSignIn={handleOpenAuth}
+                onOpenRegister={handleOpenRegister}
+              />
+            }
           />
         </Route>
       </Routes>
@@ -179,6 +236,7 @@ export default function App() {
         onClose={() => setIsAuthModalOpen(false)}
         onLoginSuccess={(userData) => setUser(userData)}
       />
+
       <RegisterModal
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
