@@ -113,11 +113,9 @@ try {
         'status' => 'cancelled',
         'cancellationReason' => $cancelReason
     ]);
-
 } catch (Throwable $error) {
     http_response_code(500);
     echo json_encode([
         'error' => 'Unable to cancel booking'
     ]);
 }
-?>
