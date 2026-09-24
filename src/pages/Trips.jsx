@@ -80,7 +80,7 @@ export default function Trips() {
       } catch {
         throw new Error("The server returned an invalid response.");
       }
-      
+
       if (!response.ok) {
         throw new Error(data.error || "Unable to cancel booking");
       }

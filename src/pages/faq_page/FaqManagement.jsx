@@ -150,4 +150,8 @@ export default function FaqManagement() {
       )}
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 5162f06c62fd30ae6288b851bc4e0c816fd7d204
