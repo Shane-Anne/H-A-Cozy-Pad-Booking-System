@@ -21,6 +21,11 @@ $bookingId = (int) ($data['bookingId'] ?? 0);
 $requestType = strtolower(trim($data['requestType'] ?? ''));
 $requestReason = trim($data['requestReason'] ?? '');
 
+$requestedCheckIn = trim($data['requestedCheckIn'] ?? '');
+$requestedCheckOut = trim($data['requestedCheckOut'] ?? '');
+$requestedGuests = (int) ($data['requestedGuests'] ?? 0);
+$requestedSpecialRequests = trim($data['requestedSpecialRequests'] ?? '');
+
 if ($bookingId <= 0) {
     http_response_code(400);
     echo json_encode([
@@ -43,6 +48,32 @@ if ($requestReason === '') {
         'error' => 'A reason or request description is required'
     ]);
     exit;
+}
+
+if ($requestType === 'modification') {
+    if ($requestedCheckIn === '' || $requestedCheckOut === '') {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'Check-in and check-out dates are required'
+        ]);
+        exit;
+    }
+
+    if ($requestedGuests <= 0) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'Number of guests must be greater than zero'
+        ]);
+        exit;
+    }
+
+    if ($requestedCheckOut <= $requestedCheckIn) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'Check-out date must be after check-in date'
+        ]);
+        exit;
+    }
 }
 
 try {
@@ -101,17 +132,49 @@ try {
         exit;
     }
 
-    $request = $pdo->prepare(
-        'INSERT INTO booking_requests
-            (booking_id, request_type, request_reason, request_status)
-         VALUES (?, ?, ?, \'pending\')'
-    );
+    if ($requestType === 'modification') {
+        $request = $pdo->prepare(
+            'INSERT INTO booking_requests
+                (
+                    booking_id,
+                    request_type,
+                    request_reason,
+                    request_status,
+                    requested_check_in,
+                    requested_check_out,
+                    requested_guests,
+                    requested_special_requests
+                )
+             VALUES (?, ?, ?, \'pending\', ?, ?, ?, ?)'
+        );
 
-    $request->execute([
-        $bookingId,
-        $requestType,
-        $requestReason
-    ]);
+        $request->execute([
+            $bookingId,
+            $requestType,
+            $requestReason,
+            $requestedCheckIn,
+            $requestedCheckOut,
+            $requestedGuests,
+            $requestedSpecialRequests
+        ]);
+    } else {
+        $request = $pdo->prepare(
+            'INSERT INTO booking_requests
+                (
+                    booking_id,
+                    request_type,
+                    request_reason,
+                    request_status
+                )
+             VALUES (?, ?, ?, \'pending\')'
+        );
+
+        $request->execute([
+            $bookingId,
+            $requestType,
+            $requestReason
+        ]);
+    }
 
     echo json_encode([
         'success' => true,
@@ -123,8 +186,8 @@ try {
 
 } catch (Throwable $error) {
     http_response_code(500);
+
     echo json_encode([
         'error' => 'Unable to submit booking request'
     ]);
 }
-?>
