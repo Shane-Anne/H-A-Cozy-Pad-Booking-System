@@ -33,23 +33,49 @@ export default function HomePage({
   }, []);
 
   // Filter properties dynamically when search parameters change
-  const handleSearch = (searchParams) => {
-    const { query, num_of_guests } = searchParams;
+  const handleSearch = async (searchParams) => {
+    const {
+      query,
+      check_in_date,
+      check_out_date,
+      num_of_guests,
+    } = searchParams;
 
-    const filtered = properties.filter((property) => {
-      const matchesQuery =
-        !query ||
-        property.building_name?.toLowerCase().includes(query.toLowerCase()) ||
-        property.location?.toLowerCase().includes(query.toLowerCase()) ||
-        property.unit_name?.toLowerCase().includes(query.toLowerCase());
+    try {
+      let listings = properties;
 
-      const matchesGuests =
-        !num_of_guests || (property.max_guests ? property.max_guests >= num_of_guests : true);
+      if (check_in_date) {
+        const response = await fetch(
+          `${API_BASE_URL}/available_listings.php?check_in_date=${check_in_date}${check_out_date ? `&check_out_date=${check_out_date}` : ''}`
+        );
 
-      return matchesQuery && matchesGuests;
-    });
+        if (!response.ok) {
+          throw new Error('Unable to check listing availability');
+        }
 
-    setFilteredProperties(filtered);
+        listings = await response.json();
+      }
+
+      const filtered = listings.filter((property) => {
+        const matchesQuery =
+          !query ||
+          property.building_name?.toLowerCase().includes(query.toLowerCase()) ||
+          property.location?.toLowerCase().includes(query.toLowerCase()) ||
+          property.unit_name?.toLowerCase().includes(query.toLowerCase());
+
+        const matchesGuests =
+          !num_of_guests ||
+          (property.max_guests
+            ? property.max_guests >= num_of_guests
+            : true);
+
+        return matchesQuery && matchesGuests;
+      });
+
+      setFilteredProperties(filtered);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

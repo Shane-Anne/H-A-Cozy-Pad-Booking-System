@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../lib/api";
@@ -11,7 +10,9 @@ export default function Trips() {
   const [showCancelBox, setShowCancelBox] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     async function loadBookings() {
@@ -29,8 +30,6 @@ export default function Trips() {
 
         const data = await response.json();
 
-        console.log("Trips API response:", data);
-
         if (!response.ok) {
           throw new Error(data.error || "Unable to load trips");
         }
@@ -47,10 +46,73 @@ export default function Trips() {
     loadBookings();
   }, []);
 
+  async function handleCancelBooking() {
+    if (!selectedBooking || !cancelReason.trim()) {
+      return;
+    }
+
+    try {
+      setIsCancelling(true);
+      setError("");
+      setSuccessMessage("");
+
+      const response = await fetch(
+        `${API_BASE_URL}/cancel_booking.php`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            bookingId: selectedBooking,
+            cancelReason: cancelReason.trim(),
+          }),
+        }
+      );
+
+      const responseText = await response.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error("The server returned an invalid response.");
+      }
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to cancel booking");
+      }
+
+      setBookings((currentBookings) =>
+        currentBookings.map((booking) =>
+          booking.bookingId === selectedBooking
+            ? {
+                ...booking,
+                status: "cancelled",
+                cancellationReason: data.cancellationReason,
+              }
+            : booking
+        )
+      );
+
+      setShowCancelBox(false);
+      setCancelReason("");
+      setSuccessMessage(
+        `Booking #${selectedBooking} has been cancelled successfully.`
+      );
+    } catch (err) {
+      console.error("Cancel booking error:", err);
+      setError(err.message);
+    } finally {
+      setIsCancelling(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-white px-5 py-12 text-black md:px-10">
       <div className="mx-auto max-w-2xl">
-
         <button
           type="button"
           onClick={() => navigate("/")}
@@ -73,7 +135,11 @@ export default function Trips() {
                   ? "border-red-600 bg-red-600 text-white hover:bg-red-700"
                   : "border-red-500 bg-white text-red-600"
               }`}
-              onClick={() => setShowCancelBox(true)}
+              onClick={() => {
+                setError("");
+                setSuccessMessage("");
+                setShowCancelBox(true);
+              }}
             >
               Cancel
             </button>
@@ -86,9 +152,7 @@ export default function Trips() {
                   ? "border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600"
                   : "border-yellow-500 bg-white text-yellow-600"
               }`}
-              onClick={() => {
-                // Request change action
-              }}
+              onClick={() => {}}
             >
               Request to change
             </button>
@@ -104,6 +168,12 @@ export default function Trips() {
         {error && (
           <p className="mt-6 text-sm text-red-600">
             {error}
+          </p>
+        )}
+
+        {successMessage && (
+          <p className="mt-6 text-sm text-green-600">
+            {successMessage}
           </p>
         )}
 
@@ -125,8 +195,6 @@ export default function Trips() {
                 }`}
               >
                 <div className="flex items-center gap-4">
-
-                  
                   <input
                     type="radio"
                     name="selectedBooking"
@@ -138,7 +206,6 @@ export default function Trips() {
                     className="mt-1 h-4 w-4"
                   />
 
-                  {/* Booking information */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -188,7 +255,7 @@ export default function Trips() {
               </label>
             ))}
           </div>
-        )}  
+        )}
 
         {showCancelBox && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
@@ -210,43 +277,36 @@ export default function Trips() {
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="Please tell us why you want to cancel..."
                 rows={4}
-                className="mt-2 w-full resize-none rounded-lg border border-gray-300 p-3 text-sm outline-none focus:border-red-500"
+                disabled={isCancelling}
+                className="mt-2 w-full resize-none rounded-lg border border-gray-300 p-3 text-sm outline-none focus:border-red-500 disabled:bg-gray-100"
               />
 
               <div className="mt-5 flex justify-end gap-3">
                 <button
                   type="button"
+                  disabled={isCancelling}
                   onClick={() => {
                     setShowCancelBox(false);
                     setCancelReason("");
                   }}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Keep booking
                 </button>
 
                 <button
                   type="button"
-                  disabled={!cancelReason.trim()}
-                  onClick={() => {
-                    console.log("Cancel booking:", selectedBooking);
-                    console.log("Reason:", cancelReason);
-
-
-                    setShowCancelBox(false);
-                    setCancelReason("");
-                  }}
+                  disabled={isCancelling || !cancelReason.trim()}
+                  onClick={handleCancelBooking}
                   className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Confirm cancellation
+                  {isCancelling ? "Cancelling..." : "Confirm cancellation"}
                 </button>
               </div>
             </div>
           </div>
         )}
-
       </div>
-
     </main>
   );
-};
+}

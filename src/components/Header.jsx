@@ -40,7 +40,7 @@ export default function Header({
       <nav className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <ul className="flex gap-8 list-none m-0 p-0">
           <li><Link to="../" className="text-xl hover:underline">All</Link></li>
-          <li><Link to="/homes" className="text-xl hover:underline">Homes</Link></li>
+          <li><Link to="/" className="text-xl hover:underline">Homes</Link></li>
           <li><Link to="/host/reservations" className="text-xl hover:underline">Reservations</Link></li>
         </ul>
       </nav>

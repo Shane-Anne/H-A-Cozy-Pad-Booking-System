@@ -16,7 +16,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    // Get the customer profile belonging to the logged-in user.
     $customer = $pdo->prepare(
         'SELECT customer_id
          FROM customer_profiles
@@ -34,12 +33,6 @@ try {
         exit;
     }
 
-    /*
-     * Get all bookings belonging to this customer.
-     *
-     * LEFT JOIN is used for booking_details because the booking itself
-     * should still appear even if its details are missing.
-     */
     $bookings = $pdo->prepare(
         'SELECT
             b.booking_id,
@@ -48,6 +41,8 @@ try {
             b.check_out_date,
             b.num_of_guests,
             b.status,
+            b.cancellation_reason,
+            b.cancelled_at,
 
             bd.guest_name,
             bd.guest_contact_num,
@@ -85,6 +80,9 @@ try {
                 'guests' => (int) $booking['num_of_guests'],
 
                 'status' => $booking['status'],
+
+                'cancellationReason' => $booking['cancellation_reason'],
+                'cancelledAt' => $booking['cancelled_at'],
 
                 'guestName' => $booking['guest_name'],
                 'guestContactNum' => $booking['guest_contact_num'],

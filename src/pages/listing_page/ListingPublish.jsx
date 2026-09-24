@@ -62,6 +62,19 @@ export default function Publish() {
       draft.zip,
     ].filter(Boolean).join(', ');
 
+    console.log('PUBLISH DATA:', {
+  buildingId: draft.editingBuildingId,
+  buildingName: draft.buildingName,
+  location,
+  latitude: draft.latitude ?? null,
+  longitude: draft.longitude ?? null,
+  unitName: 'Entire place',
+  description: draft.description,
+  maxGuests: draft.maxGuests,
+  ratePerNight: draft.ratePerNight,
+  amenities: draft.amenities || [],
+});
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/${isEditing ? 'edit_listing.php' : 'create_listing.php'}`,
