@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ListingHeader from '../../components/ListingHeader';
+import {
+  getListingDraft,
+  updateListingDraft,
+} from '../../lib/listingDraft';
 
 export default function PropertyDescription() {
   const navigate = useNavigate();
-  const [selectedType, setSelectedType] = useState(null);
+
+  const draft = getListingDraft();
+
+  const [selectedType, setSelectedType] = useState(
+    draft.accommodationType || null
+  );
 
   const propertyTypes = [
     {
@@ -45,6 +54,26 @@ export default function PropertyDescription() {
     },
   ];
 
+  const handleTypeSelect = (typeId) => {
+    setSelectedType(typeId);
+
+    updateListingDraft({
+      accommodationType: typeId,
+    });
+  };
+
+  const handleContinue = () => {
+    if (!selectedType) {
+      return;
+    }
+
+    updateListingDraft({
+      accommodationType: selectedType,
+    });
+
+    navigate('/host/listing/PlaceDescription');
+  };
+
   return (
     <div className="min-h-screen bg-white text-black font-sans flex flex-col">
 
@@ -73,7 +102,7 @@ export default function PropertyDescription() {
                 <button
                   key={property.id}
                   type="button"
-                  onClick={() => setSelectedType(property.id)}
+                  onClick={() => handleTypeSelect(property.id)}
                   className={`
                     h-[168px]
                     rounded-[22px]
@@ -106,6 +135,7 @@ export default function PropertyDescription() {
         {/* Bottom buttons */}
         <div className="mt-auto flex items-center justify-between px-10 pb-6 pt-8">
 
+          {/* Back */}
           <button
             type="button"
             onClick={() => navigate('/host/listing')}
@@ -123,24 +153,26 @@ export default function PropertyDescription() {
             Back
           </button>
 
+          {/* Continue */}
           <button
             type="button"
             disabled={!selectedType}
-            onClick={() => navigate('/host/listing/PlaceDescription')}
+            onClick={handleContinue}
             className={`
-                w-[142px] h-[50px]
-                rounded-full
-                border border-black
-                text-[20px]
-                transition
-                ${
+              w-[142px] h-[50px]
+              rounded-full
+              border border-black
+              text-[20px]
+              transition
+              ${
                 selectedType
-                    ? 'bg-black text-white hover:bg-neutral-800 cursor-pointer'
-                    : 'bg-neutral-200 text-black cursor-not-allowed'
-                }
-            `} >
+                  ? 'bg-black text-white hover:bg-neutral-800 cursor-pointer'
+                  : 'bg-neutral-200 text-black cursor-not-allowed'
+              }
+            `}
+          >
             Continue
-        </button>
+          </button>
 
         </div>
       </main>

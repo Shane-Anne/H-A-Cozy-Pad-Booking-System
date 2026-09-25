@@ -3,8 +3,8 @@ import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
 import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
 
-let bedroomIdCounter = 1;
-let bedIdCounter = 1;
+let bedroomIdCounter = 0;
+let bedIdCounter = 0;
 
 function makeBed() {
   return {
@@ -125,8 +125,8 @@ export default function RoomsRates() {
   const draft = getListingDraft();
 
   const [bedrooms, setBedrooms] = useState([makeBedroom()]);
-  const [bathrooms, setBathrooms] = useState(draft.bathrooms || 1);
-  const [maxGuests, setMaxGuests] = useState(draft.maxGuests || 1);
+  const [bathrooms, setBathrooms] = useState(draft.bathrooms || 0);
+  const [maxGuests, setMaxGuests] = useState(draft.maxGuests || 0);
   const [nightlyRate, setNightlyRate] = useState(draft.ratePerNight || '');
 
   const addBedroom = () => {
@@ -250,7 +250,7 @@ export default function RoomsRates() {
             <Counter
               label="Number of Bathrooms"
               value={bathrooms}
-              min={1}
+              min={0}
               onChange={(value) => {
                 setBathrooms(value);
                 updateListingDraft({ bathrooms: value });
@@ -259,7 +259,7 @@ export default function RoomsRates() {
             <Counter
               label="Max guests allowed"
               value={maxGuests}
-              min={1}
+              min={0}
               onChange={(value) => {
                 setMaxGuests(value);
                 updateListingDraft({ maxGuests: value });

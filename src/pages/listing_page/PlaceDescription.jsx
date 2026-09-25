@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
+import {
+  getListingDraft,
+  updateListingDraft,
+} from '../../lib/listingDraft';
 
 export default function PlaceDescription() {
-  const [selectedProperty, setSelectedProperty] = useState(null);
   const navigate = useNavigate();
+
+  const draft = getListingDraft();
+
+  const [selectedProperty, setSelectedProperty] = useState(
+    draft.placeType || null
+  );
 
   const propertyTypes = [
     {
@@ -17,15 +26,35 @@ export default function PlaceDescription() {
       id: 'room',
       title: 'Room',
       description:
-        'Standalone units rented as a whole, such as individual apartments/flats, single bungalows, villas, and guest houses. They offer a residential experience for travelers seeking privacy and self-sufficient stays.',
+        'A private room within a property where guests may share some common spaces with the host or other guests.',
     },
     {
       id: 'hostel',
       title: 'Hostel shared-room',
       description:
-        'Standalone units rented as a whole, such as individual apartments/flats, single bungalows, villas, and guest houses. They offer a residential experience for travelers seeking privacy and self-sufficient stays.',
+        'A shared sleeping space in a hostel, typically with multiple guests staying in the same room.',
     },
   ];
+
+  const handlePropertySelect = (propertyId) => {
+    setSelectedProperty(propertyId);
+
+    updateListingDraft({
+      placeType: propertyId,
+    });
+  };
+
+  const handleContinue = () => {
+    if (!selectedProperty) {
+      return;
+    }
+
+    updateListingDraft({
+      placeType: selectedProperty,
+    });
+
+    navigate('/host/listing/PlaceOffer');
+  };
 
   return (
     <div className="min-h-screen bg-white text-black font-sans flex flex-col">
@@ -49,13 +78,16 @@ export default function PlaceDescription() {
           {/* Property cards */}
           <div className="space-y-5">
             {propertyTypes.map((property) => {
-              const selected = selectedProperty === property.id;
+              const selected =
+                selectedProperty === property.id;
 
               return (
                 <button
                   key={property.id}
                   type="button"
-                  onClick={() => setSelectedProperty(property.id)}
+                  onClick={() =>
+                    handlePropertySelect(property.id)
+                  }
                   className={`
                     block w-full text-left
                     border border-black
@@ -86,7 +118,7 @@ export default function PlaceDescription() {
         {/* Bottom buttons */}
         <div className="mt-auto flex items-center justify-between px-10 pb-6 pt-8">
 
-          {/* Exit */}
+          {/* Back */}
           <button
             type="button"
             onClick={() => window.history.back()}
@@ -104,24 +136,26 @@ export default function PlaceDescription() {
           </button>
 
           {/* Continue */}
-        <button
+          <button
             type="button"
             disabled={!selectedProperty}
-            onClick={() => navigate('/host/listing/PlaceOffer')}
+            onClick={handleContinue}
             className={`
-                w-[142px] h-[50px]
-                rounded-full
-                border border-black
-                text-[20px]
-                transition
-                ${
+              w-[142px] h-[50px]
+              rounded-full
+              border border-black
+              text-[20px]
+              transition
+              ${
                 selectedProperty
-                    ? 'bg-black text-white hover:bg-neutral-800 cursor-pointer'
-                    : 'bg-neutral-200 text-black cursor-not-allowed'
-                }
-            `} >
+                  ? 'bg-black text-white hover:bg-neutral-800 cursor-pointer'
+                  : 'bg-neutral-200 text-black cursor-not-allowed'
+              }
+            `}
+          >
             Continue
-        </button>
+          </button>
+
         </div>
       </main>
     </div>

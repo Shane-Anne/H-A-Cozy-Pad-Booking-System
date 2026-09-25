@@ -1,13 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../lib/api';
 
 export default function PropertySection({ title, properties = [] }) {
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+
+    return `${API_BASE_URL.replace(/\/$/, '')}/${imagePath.replace(/^\/+/, '')}`;
+  };
+
   return (
     <section className="px-5 md:px-10 lg:px-[52px] py-10">
       {title && (
         <div className="flex items-center gap-3 mb-7">
-          <h2 className="text-2xl lg:text-[27px] font-medium">{title}</h2>
-          <span className="text-xl text-neutral-400 cursor-pointer">›</span>
+          <h2 className="text-2xl lg:text-[27px] font-medium">
+            {title}
+          </h2>
+
+          <span className="text-xl text-neutral-400 cursor-pointer">
+            ›
+          </span>
         </div>
       )}
 
@@ -27,59 +39,82 @@ export default function PropertySection({ title, properties = [] }) {
             <path d="M5 9v11h14V9" />
             <path d="M9 20v-6h6v6" />
           </svg>
-          <p className="text-3xl lg:text-4xl font-medium">No available housing</p>
-          <p className="text-base text-neutral-400 mt-2">Try adjusting your search criteria or dates.</p>
+
+          <p className="text-3xl lg:text-4xl font-medium">
+            No available housing
+          </p>
+
+          <p className="text-base text-neutral-400 mt-2">
+            Try adjusting your search criteria or dates.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
-          {properties.map((property) => (
-            <Link
-              key={property.unit_id}
-              to={`/property/${property.unit_id}`}
-              className="block no-underline text-black hover:text-black group"
-            >
-              <div>
-                {/* Property Image Placeholder */}
-                <div className="w-full aspect-square bg-neutral-300 rounded-[20px] overflow-hidden group-hover:opacity-95 transition-opacity">
-                  {property.image_url ? (
-                    <img 
-                      src={property.image_url} 
-                      alt={property.unit_name} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-500 font-light text-sm">
-                      No Image Available
-                    </div>
-                  )}
-                </div>
+          {properties.map((property) => {
+            // First uploaded image = homepage thumbnail
+            const thumbnail =
+              Array.isArray(property.images) && property.images.length > 0
+                ? getImageUrl(property.images[0])
+                : null;
 
-                {/* Property Details */}
-                <div className="mt-3">
-                  <div className="flex justify-between items-start gap-2">
-                    <h3 className="text-xl lg:text-2xl font-normal leading-tight">
-                      {property.unit_name}
-                    </h3>
-                    {property.max_guests && (
-                      <span className="text-xs bg-neutral-200 text-neutral-700 px-2 py-1 rounded-full whitespace-nowrap">
-                        Up to {property.max_guests} guests
-                      </span>
+            return (
+              <Link
+                key={property.unit_id}
+                to={`/property/${property.unit_id}`}
+                className="block no-underline text-black hover:text-black group"
+              >
+                <div>
+                  {/* Property Image */}
+                  <div className="w-full aspect-square bg-neutral-300 rounded-[20px] overflow-hidden group-hover:opacity-95 transition-opacity">
+                    {thumbnail ? (
+                      <img
+                        src={thumbnail}
+                        alt={property.unit_name || 'Property'}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-neutral-500 font-light text-sm">
+                        No Image Available
+                      </div>
                     )}
                   </div>
 
-                  <p className="text-base text-neutral-500 mt-0.5">
-                    {property.building_name} • {property.location}
-                  </p>
+                  {/* Property Details */}
+                  <div className="mt-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <h3 className="text-xl lg:text-2xl font-normal leading-tight">
+                        {property.unit_name}
+                      </h3>
 
-                  <p className="text-lg lg:text-xl font-light mt-1">
-                    ₱ {Number(property.rate_per_night).toLocaleString('en-PH', {
-                      minimumFractionDigits: 2,
-                    })} <span className="text-sm text-neutral-500 font-normal">/ night</span>
-                  </p>
+                      {property.max_guests && (
+                        <span className="text-xs bg-neutral-200 text-neutral-700 px-2 py-1 rounded-full whitespace-nowrap">
+                          Up to {property.max_guests} guests
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-base text-neutral-500 mt-0.5">
+                      {property.building_name} • {property.location}
+                    </p>
+
+                    <p className="text-lg lg:text-xl font-light mt-1">
+                      ₱{' '}
+                      {Number(property.rate_per_night).toLocaleString(
+                        'en-PH',
+                        {
+                          minimumFractionDigits: 2,
+                        }
+                      )}{' '}
+                      <span className="text-sm text-neutral-500 font-normal">
+                        / night
+                      </span>
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>
