@@ -7,11 +7,12 @@ import PropertySection from './components/PropertySection';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import RegisterModal from './components/RegisterModal';
-import Chatbot from './components/Chatbot'; // 💬 Import Chatbot component
+import Chatbot from './components/Chatbot'; 
 
 import DashboardListings from './pages/DashboardListings';
 import DashboardReservations from './pages/DashboardReservations';
 import HelpCenter from './pages/HelpCenter';
+import FaqManagement from './pages/FaqManagement';
 
 function HomePage({
     onOpenSignIn,
@@ -80,7 +81,7 @@ export default function App() {
                             setIsMenuOpen={setIsMenuOpen}
                             onOpenSignIn={handleOpenAuth}
                             onOpenRegister={handleOpenRegister}
-                            onOpenChat={() => setIsChatOpen(true)} // 💬 Pass trigger to HelpCenter
+                            onOpenChat={() => setIsChatOpen(true)}
                         />
                     }
                 />
@@ -94,6 +95,12 @@ export default function App() {
                 <Route
                     path="/host/Reservations"
                     element={<DashboardReservations />}
+                />
+
+                {/* FAQ Management */}
+                <Route
+                    path="/host/FaqManagement"
+                    element={<FaqManagement />}
                 />
             </Routes>
 
@@ -114,8 +121,8 @@ export default function App() {
                     onClick={() => setIsChatOpen(true)}
                     className="fixed bottom-6 right-6 z-40 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg hover:bg-gray-700"
                 >
-                💬 Chat
-            </button>
+                    💬 Chat
+                </button>
             )}
 
             {/* 💬 Global Floating Chatbot Bubble */}
