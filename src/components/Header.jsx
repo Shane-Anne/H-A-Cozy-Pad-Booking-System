@@ -32,7 +32,7 @@ export default function Header({
   }, [isMenuOpen, setIsMenuOpen]);
 
   return (
-    <header className="relative flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
+    <header className="relative z-[2000] flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
       <Link to="../" className="text-3xl lg:text-4xl font-bold text-black no-underline">
         <img src={logo} alt="H&A Cozy Pad" className="h-20 w-auto object-contain" />
       </Link>
@@ -77,7 +77,7 @@ export default function Header({
       {isMenuOpen && (
         <div
           ref={menuRef}
-          className="absolute right-[30px] top-[90px] w-[280px] bg-white rounded-2xl shadow-xl border border-neutral-100 py-3 z-40"
+          className="absolute right-[30px] top-[90px] w-[280px] bg-white rounded-2xl shadow-xl border border-neutral-100 py-3 z-[2100]"
         >
           {user && (
             <>

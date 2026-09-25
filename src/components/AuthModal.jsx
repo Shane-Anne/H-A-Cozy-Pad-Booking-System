@@ -62,7 +62,7 @@ export default function AuthModal({ isOpen, onClose, onSwitchToRegister }) {
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[1px] px-4"
+      className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 backdrop-blur-[1px] px-4"
     >
       <div className="w-full max-w-[520px] bg-white rounded-[25px] shadow-xl px-8 sm:px-12 py-10 relative">
         <button

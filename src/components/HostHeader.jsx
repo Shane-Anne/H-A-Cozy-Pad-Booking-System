@@ -46,7 +46,7 @@ export default function HostHeader({ activeNav = 'Today' }) {
   }, [isMenuOpen]);
 
   return (
-    <header className="grid grid-cols-[1fr_auto_1fr] items-center px-5 md:px-10 lg:px-[52px] py-6 bg-[#fdfdfd] border-b border-neutral-200 relative">
+    <header className="relative z-[2000] grid grid-cols-[1fr_auto_1fr] items-center px-5 md:px-10 lg:px-[52px] py-6 bg-[#fdfdfd] border-b border-neutral-200">
       <Link to="/" className="text-2xl lg:text-3xl font-bold text-black no-underline justify-self-start">
         H&A Cozy Pad
       </Link>
@@ -144,7 +144,7 @@ export default function HostHeader({ activeNav = 'Today' }) {
       {isMenuOpen && (
         <div
           ref={menuRef}
-          className="absolute right-[20px] top-[70px] w-[280px] bg-white rounded-2xl shadow-xl border border-neutral-100 py-3 z-40"
+          className="absolute right-[20px] top-[70px] w-[280px] bg-white rounded-2xl shadow-xl border border-neutral-100 py-3 z-[2100]"
         >
           <Link to="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-base font-medium hover:bg-neutral-100 text-black no-underline">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/></svg>

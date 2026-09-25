@@ -428,7 +428,7 @@ export default function Location() {
           </div>
 
           {/* Map */}
-          <div className="mt-6 mb-6 overflow-hidden rounded-[19px] border border-black">
+          <div className="relative z-0 mt-6 mb-6 overflow-hidden rounded-[19px] border border-black">
 
             <div className="h-[300px]">
 

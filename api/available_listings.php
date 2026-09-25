@@ -10,14 +10,26 @@ $stmt = $pdo->query(
         b.building_name,
         b.property_category,
         b.location,
+        b.location_search,
+        b.country,
+        b.state,
+        b.city,
+        b.street,
+        b.unit_location,
+        b.zip,
         b.latitude,
         b.longitude,
 
         u.unit_id,
         u.unit_name,
         u.description,
+        u.property_size,
         u.max_guests,
+        u.bathrooms,
+        u.bedroom_details,
         u.rate_per_night,
+        u.base_price,
+        u.discounts,
         u.status,
         u.available_from,
         u.available_until,
@@ -55,14 +67,26 @@ $stmt = $pdo->query(
         b.building_name,
         b.property_category,
         b.location,
+        b.location_search,
+        b.country,
+        b.state,
+        b.city,
+        b.street,
+        b.unit_location,
+        b.zip,
         b.latitude,
         b.longitude,
 
         u.unit_id,
         u.unit_name,
         u.description,
+        u.property_size,
         u.max_guests,
+        u.bathrooms,
+        u.bedroom_details,
         u.rate_per_night,
+        u.base_price,
+        u.discounts,
         u.status,
         u.available_from,
         u.available_until
@@ -74,6 +98,16 @@ $listings =
     $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($listings as &$listing) {
+
+    $listing['bedroom_details'] = json_decode(
+        $listing['bedroom_details'] ?? '[]',
+        true
+    ) ?: [];
+
+    $listing['discounts'] = json_decode(
+        $listing['discounts'] ?? '[]',
+        true
+    ) ?: [];
 
     if (!empty($listing['images'])) {
 

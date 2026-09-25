@@ -608,7 +608,7 @@ const handleModificationUpdate = async (requestId, action) => {
       </main>
 
       {statusChange && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 px-5">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-semibold text-neutral-900">
               Change Booking Status
@@ -662,7 +662,7 @@ const handleModificationUpdate = async (requestId, action) => {
       )}
 
       {modificationChange && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 px-5">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-semibold text-neutral-900">
               {modificationChange.action === 'approve'
@@ -720,7 +720,7 @@ const handleModificationUpdate = async (requestId, action) => {
       )}
 
       {(customerInfo || isCustomerLoading || customerError) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 px-5">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-semibold text-neutral-900">
               Customer Information
@@ -817,7 +817,7 @@ const handleModificationUpdate = async (requestId, action) => {
       )}
 
       {isPaymentProofOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-5">
+        <div className="fixed inset-0 z-[3100] flex items-center justify-center bg-black/60 px-5">
           <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-neutral-900">

@@ -1,38 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
-
-function CheckSquare({ checked }) {
-  return (
-    <span
-      className={`
-        w-7 h-7 rounded-md border border-black flex items-center justify-center shrink-0
-        ${checked ? 'bg-white' : 'bg-white'}
-      `}
-    >
-      {checked && (
-        <svg
-          className="w-4 h-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M5 13l4 4L19 7" />
-        </svg>
-      )}
-    </span>
-  );
-}
+import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
 
 export default function PricesDiscounts() {
   const navigate = useNavigate();
+  const draft = getListingDraft();
 
-  const [basePrice, setBasePrice] = useState('');
+  const [basePrice, setBasePrice] = useState(draft.basePrice || '');
 
-  const [discounts, setDiscounts] = useState([
+  const [discounts, setDiscounts] = useState(draft.discounts || [
     {
       id: 'newListing1',
       percent: '20%',
@@ -49,10 +26,39 @@ export default function PricesDiscounts() {
     },
   ]);
 
+  useEffect(() => {
+    updateListingDraft({ basePrice, discounts });
+  }, [basePrice, discounts]);
+
   const toggleDiscount = (id) => {
     setDiscounts((prev) =>
       prev.map((d) => (d.id === id ? { ...d, checked: !d.checked } : d))
     );
+  };
+
+  const updateDiscount = (id, field, value) => {
+    setDiscounts((prev) =>
+      prev.map((discount) =>
+        discount.id === id ? { ...discount, [field]: value } : discount
+      )
+    );
+  };
+
+  const addDiscount = () => {
+    setDiscounts((prev) => [
+      ...prev,
+      {
+        id: `custom-${Date.now()}`,
+        percent: '10%',
+        title: 'Custom offer',
+        description: '',
+        checked: true,
+      },
+    ]);
+  };
+
+  const removeDiscount = (id) => {
+    setDiscounts((prev) => prev.filter((discount) => discount.id !== id));
   };
 
   return (
@@ -102,31 +108,59 @@ export default function PricesDiscounts() {
           </div>
 
           {/* Add Discounts */}
-          <h2 className="text-[16px] font-semibold mb-3">Add Discounts</h2>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-[16px] font-semibold">Add Discounts</h2>
+            <button
+              type="button"
+              onClick={addDiscount}
+              className="text-sm font-medium underline"
+            >
+              Add custom discount
+            </button>
+          </div>
 
           <div className="space-y-4 mb-8">
             {discounts.map((discount) => (
-              <button
+              <div
                 key={discount.id}
-                type="button"
-                onClick={() => toggleDiscount(discount.id)}
-                className="w-full flex items-center gap-4 border border-black rounded-[19px] px-5 py-4 text-left hover:bg-neutral-50 transition"
+                className={`w-full border border-black rounded-[19px] px-5 py-4 transition ${discount.checked ? 'bg-neutral-50' : 'bg-white'}`}
               >
-                <span className="text-[17px] font-semibold w-12 shrink-0">
-                  {discount.percent}
-                </span>
-
-                <span className="flex-1">
-                  <span className="block text-[15px] font-semibold leading-tight">
-                    {discount.title}
-                  </span>
-                  <span className="block text-[14px] text-neutral-600 leading-tight mt-0.5">
-                    {discount.description}
-                  </span>
-                </span>
-
-                <CheckSquare checked={discount.checked} />
-              </button>
+                <div className="grid gap-3 sm:grid-cols-[90px_1fr_auto]">
+                  <input
+                    value={discount.percent || ''}
+                    onChange={(event) => updateDiscount(discount.id, 'percent', event.target.value)}
+                    placeholder="10%"
+                    className="h-10 rounded-lg border border-neutral-300 px-3 text-sm outline-none focus:border-black"
+                  />
+                  <input
+                    value={discount.title || ''}
+                    onChange={(event) => updateDiscount(discount.id, 'title', event.target.value)}
+                    placeholder="Offer title"
+                    className="h-10 rounded-lg border border-neutral-300 px-3 text-sm outline-none focus:border-black"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeDiscount(discount.id)}
+                    className="text-xs text-red-600 underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <input
+                  value={discount.description || ''}
+                  onChange={(event) => updateDiscount(discount.id, 'description', event.target.value)}
+                  placeholder="Offer description"
+                  className="mt-3 h-10 w-full rounded-lg border border-neutral-300 px-3 text-sm outline-none focus:border-black"
+                />
+                <label className="mt-3 flex items-center gap-2 text-xs text-neutral-600">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(discount.checked)}
+                    onChange={() => toggleDiscount(discount.id)}
+                  />
+                  Show this offer to guests
+                </label>
+              </div>
             ))}
           </div>
         </div>
