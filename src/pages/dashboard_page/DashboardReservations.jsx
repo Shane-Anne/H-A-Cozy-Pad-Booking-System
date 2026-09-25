@@ -927,11 +927,7 @@ export default function DashboardReservations() {
       )}
 
       {modificationChange && (
-<<<<<<< HEAD
         <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 px-5">
-=======
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-5">
->>>>>>> 06c74274aba5fd313057e4285880cd329c2bc142
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-semibold text-neutral-900">
               {modificationChange.action === 'approve'
@@ -1132,11 +1128,7 @@ export default function DashboardReservations() {
       )}
 
       {isPaymentProofOpen && (
-<<<<<<< HEAD
         <div className="fixed inset-0 z-[3100] flex items-center justify-center bg-black/60 px-5">
-=======
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-5">
->>>>>>> 06c74274aba5fd313057e4285880cd329c2bc142
           <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <div>
