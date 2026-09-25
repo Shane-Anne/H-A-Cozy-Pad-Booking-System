@@ -50,6 +50,8 @@ create table IF NOT EXISTS units(
     max_guests int not null default 1,
     rate_per_night decimal(10, 2) not null,
     status enum('available', 'occupied', 'maintenance', 'unavailable') not null default 'available',
+    available_from date null,
+    available_until date null,
     created_at timestamp default current_timestamp,
     constraint fk_unit_building
         foreign key (building_id)
@@ -64,6 +66,8 @@ create table IF NOT EXISTS bookings(
     check_in_date date not null,
     check_out_date date not null,
     num_of_guests int not null default 1,
+    cancellation_reason text null,
+    cancelled_at datetime null,
     status enum('pending', 'awaiting_payment', 'payment_review', 'confirmed', 'checked_in', 'checked_out', 
                 'cancelled', 'rejected') not null default 'pending',
     created_at timestamp default current_timestamp,
@@ -151,7 +155,7 @@ create table NOT EXISTS payments(
     proof_of_payment varchar(255) not null,
     payment_status enum('pending', 'verified', 'rejected', 'refunded') not null default 'pending',
     verified_by int null,
-    verified_at datetime not null,
+    verified_at datetime null,
     created_at timestamp default current_timestamp,
     constraint fk_payment_booking
         foreign key (booking_id)
