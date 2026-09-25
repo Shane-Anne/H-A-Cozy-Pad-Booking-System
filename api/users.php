@@ -56,7 +56,7 @@ try {
                 full_name,
                 email,
                 contact_num,
-                role,
+                COALESCE(NULLIF(role, ''), 'customer') AS role,
                 created_at,
                 updated_at
             FROM users

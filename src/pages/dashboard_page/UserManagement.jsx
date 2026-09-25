@@ -331,7 +331,8 @@ export default function UserManagement() {
                   <td className="py-4 text-base">
                     <span className="inline-flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      {(user.role || 'customer').charAt(0).toUpperCase() +
+                        (user.role || 'customer').slice(1)}
                     </span>
                   </td>
 
