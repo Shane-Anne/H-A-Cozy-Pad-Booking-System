@@ -43,6 +43,7 @@ export default function Trips() {
     reason: "",
   });
   const [isSubmittingModification, setIsSubmittingModification] = useState(false);
+  const [proofOfPayment, setProofOfPayment] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -97,39 +98,190 @@ export default function Trips() {
     return () => window.removeEventListener("auth-changed", handleAuthChange);
   }, []);
 
-  function openModificationBox() {
-    if (!selectedBooking) {
+function openModificationBox() {
+  if (!selectedBooking) {
+    return;
+  }
+
+  const booking = bookings.find(
+    (item) => item.bookingId === selectedBooking
+  );
+
+  if (!booking) {
+    return;
+  }
+
+  setError("");
+  setSuccessMessage("");
+  setProofOfPayment(null);
+
+  setModificationForm({
+    checkIn: booking.checkIn || "",
+    checkOut: booking.checkOut || "",
+    guests: booking.guests || "",
+    specialRequests: "",
+    reason: "",
+  });
+
+  setShowModifyBox(true);
+}
+
+function closeModificationBox() {
+  if (isSubmittingModification) {
+    return;
+  }
+
+  setShowModifyBox(false);
+  setProofOfPayment(null);
+
+  setModificationForm({
+    checkIn: "",
+    checkOut: "",
+    guests: "",
+    specialRequests: "",
+    reason: "",
+  });
+}
+
+async function handleModificationRequest() {
+  if (!selectedBooking) {
+    return;
+  }
+
+  if (
+    !modificationForm.checkIn ||
+    !modificationForm.checkOut ||
+    !modificationForm.guests ||
+    !String(modificationForm.reason || '').trim()
+  ) {
+    setError("Please complete the required modification details.");
+    return;
+  }
+
+  if (modificationForm.checkOut <= modificationForm.checkIn) {
+    setError("Check-out date must be after check-in date.");
+    return;
+  }
+
+  const booking = bookings.find(
+    (item) => item.bookingId === selectedBooking
+  );
+
+  if (!booking) {
+    setError("Unable to find the selected booking.");
+    return;
+  }
+
+  const ratePerNight = Number(
+    booking.ratePerNight ??
+    booking.rate_per_night ??
+    booking.rate ??
+    0
+  );
+
+  const oldNights = Math.max(
+    1,
+    Math.round(
+      (new Date(booking.checkOut) - new Date(booking.checkIn)) /
+        86400000
+    )
+  );
+
+  const newNights = Math.max(
+    1,
+    Math.round(
+      (new Date(modificationForm.checkOut) -
+        new Date(modificationForm.checkIn)) /
+        86400000
+    )
+  );
+
+  const difference = (newNights - oldNights) * ratePerNight;
+
+  if (difference > 0 && !proofOfPayment) {
+    setError("Please upload your proof of payment for the additional amount.");
+    return;
+  }
+
+  if (proofOfPayment) {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(proofOfPayment.type)) {
+      setError("Proof of payment must be a JPG, PNG, or WEBP image.");
       return;
     }
 
-    const booking = bookings.find(
-      (item) => item.bookingId === selectedBooking
-    );
-
-    if (!booking) {
+    if (proofOfPayment.size > 10 * 1024 * 1024) {
+      setError("Proof of payment must not exceed 10MB.");
       return;
     }
+  }
 
+  try {
+    setIsSubmittingModification(true);
     setError("");
     setSuccessMessage("");
 
-    setModificationForm({
-      checkIn: booking.checkIn || "",
-      checkOut: booking.checkOut || "",
-      guests: booking.guests || "",
-      specialRequests: "",
-      reason: "",
-    });
+    const formData = new FormData();
 
-    setShowModifyBox(true);
-  }
+    formData.append("bookingId", selectedBooking);
+    formData.append("requestType", "modification");
+    formData.append(
+      "requestReason",
+      String(modificationForm.reason || '').trim()
+    );
+    formData.append(
+      "requestedCheckIn",
+      modificationForm.checkIn
+    );
+    formData.append(
+      "requestedCheckOut",
+      modificationForm.checkOut
+    );
+    formData.append(
+      "requestedGuests",
+      Number(modificationForm.guests)
+    );
+    formData.append(
+      "requestedSpecialRequests",
+      modificationForm.specialRequests.trim()
+    );
 
-  function closeModificationBox() {
-    if (isSubmittingModification) {
-      return;
+    if (proofOfPayment) {
+      formData.append("proofOfPayment", proofOfPayment);
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/submit_booking_request.php`,
+      {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      }
+    );
+
+    const responseText = await response.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error("The server returned an invalid response.");
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Unable to submit modification request"
+      );
     }
 
     setShowModifyBox(false);
+    setProofOfPayment(null);
 
     setModificationForm({
       checkIn: "",
@@ -138,85 +290,71 @@ export default function Trips() {
       specialRequests: "",
       reason: "",
     });
-  }
 
-  async function handleModificationRequest() {
-    if (!selectedBooking) {
-      return;
-    }
-
-    if (
-      !modificationForm.checkIn ||
-      !modificationForm.checkOut ||
-      !modificationForm.guests ||
-      !modificationForm.reason.trim()
-    ) {
-      setError("Please complete the required modification details.");
-      return;
-    }
-
-    try {
-      setIsSubmittingModification(true);
-      setError("");
-      setSuccessMessage("");
-
-      const response = await fetch(
-        `${API_BASE_URL}/submit_booking_request.php`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            bookingId: selectedBooking,
-            requestType: "modification",
-            requestReason: modificationForm.reason.trim(),
-            requestedCheckIn: modificationForm.checkIn,
-            requestedCheckOut: modificationForm.checkOut,
-            requestedGuests: Number(modificationForm.guests),
-            requestedSpecialRequests:
-              modificationForm.specialRequests.trim(),
-          }),
-        }
+    if (difference > 0) {
+      setSuccessMessage(
+        `Modification request submitted. Additional payment of PHP ${difference.toLocaleString(
+          "en-PH",
+          { minimumFractionDigits: 2 }
+        )} has been submitted for verification.`
       );
-
-      const responseText = await response.text();
-
-      let data;
-
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        throw new Error("The server returned an invalid response.");
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data.error || "Unable to submit modification request"
-        );
-      }
-
-      setShowModifyBox(false);
-
-      setModificationForm({
-        checkIn: "",
-        checkOut: "",
-        guests: "",
-        specialRequests: "",
-        reason: "",
-      });
-
+    } else if (difference < 0) {
+      setSuccessMessage(
+        `Modification request submitted. You are eligible for a refund of PHP ${Math.abs(
+          difference
+        ).toLocaleString("en-PH", {
+          minimumFractionDigits: 2,
+        })}. Please wait for the owner to process the refund.`
+      );
+    } else {
       setSuccessMessage(
         `Modification request for booking #${selectedBooking} has been submitted.`
       );
-    } catch (err) {
-      console.error("Modification request error:", err);
-      setError(err.message);
-    } finally {
-      setIsSubmittingModification(false);
     }
+  } catch (err) {
+    console.error("Modification request error:", err);
+    setError(err.message);
+  } finally {
+    setIsSubmittingModification(false);
   }
+}
+
+const selectedBookingData = bookings.find(
+  (booking) => booking.bookingId === selectedBooking
+);
+
+const modificationRate = Number(
+  selectedBookingData?.ratePerNight ??
+  selectedBookingData?.rate_per_night ??
+  selectedBookingData?.rate ??
+  0
+);
+
+const originalNights = selectedBookingData
+  ? Math.max(
+      1,
+      Math.round(
+        (new Date(selectedBookingData.checkOut) -
+          new Date(selectedBookingData.checkIn)) /
+          86400000
+      )
+    )
+  : 0;
+
+const requestedNights =
+  modificationForm.checkIn && modificationForm.checkOut
+    ? Math.max(
+        1,
+        Math.round(
+          (new Date(modificationForm.checkOut) -
+            new Date(modificationForm.checkIn)) /
+            86400000
+        )
+      )
+    : 0;
+
+const modificationDifference =
+  modificationRate * (requestedNights - originalNights);
 
   async function handleCancelBooking() {
     if (!selectedBooking || !cancelReason.trim()) {
@@ -551,6 +689,85 @@ export default function Trips() {
                 />
               </div>
 
+              {modificationForm.checkIn &&
+  modificationForm.checkOut &&
+  modificationDifference !== 0 && (
+    <div
+      className={`mt-4 rounded-xl border p-4 ${
+        modificationDifference > 0
+          ? "border-yellow-200 bg-yellow-50"
+          : "border-green-200 bg-green-50"
+      }`}
+    >
+      {modificationDifference > 0 ? (
+        <>
+          <p className="text-sm font-semibold text-yellow-800">
+            Additional payment required
+          </p>
+          <p className="mt-1 text-sm text-yellow-700">
+            Your new booking is{" "}
+            {requestedNights - originalNights} night
+            {requestedNights - originalNights !== 1 ? "s" : ""} longer.
+          </p>
+          <p className="mt-2 text-lg font-bold text-yellow-900">
+            PHP{" "}
+            {modificationDifference.toLocaleString("en-PH", {
+              minimumFractionDigits: 2,
+            })}
+          </p>
+          <p className="mt-1 text-xs text-yellow-700">
+            Please upload your proof of payment below.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-semibold text-green-800">
+            Refund applicable
+          </p>
+          <p className="mt-1 text-sm text-green-700">
+            Your new booking is shorter than your current booking.
+          </p>
+          <p className="mt-2 text-lg font-bold text-green-900">
+            PHP{" "}
+            {Math.abs(modificationDifference).toLocaleString("en-PH", {
+              minimumFractionDigits: 2,
+            })}
+          </p>
+          <p className="mt-1 text-xs text-green-700">
+            No payment is required. Please wait for the owner to process
+            your refund.
+          </p>
+        </>
+      )}
+    </div>
+  )}
+
+  <div className="mt-4">
+    <label className="block text-sm font-medium text-gray-700">
+      Proof of payment
+    </label>
+
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      onChange={(e) =>
+        setProofOfPayment(e.target.files?.[0] || null)
+      }
+      disabled={isSubmittingModification}
+      className="mt-2 block w-full rounded-lg border border-gray-300 p-3 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-sm file:font-medium"
+    />
+
+    <p className="mt-1 text-xs text-gray-500">
+      JPG, PNG, or WEBP only. Maximum size: 10MB.
+    </p>
+
+    {proofOfPayment && (
+      <p className="mt-2 text-xs text-green-600">
+        Selected: {proofOfPayment.name}
+      </p>
+    )}
+  </div>
+
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700">
                   Reason for change
@@ -588,7 +805,8 @@ export default function Trips() {
                     !modificationForm.checkIn ||
                     !modificationForm.checkOut ||
                     !modificationForm.guests ||
-                    !modificationForm.reason.trim()
+                    !modificationForm.reason.trim() ||
+                    (modificationDifference > 0 && !proofOfPayment)
                   }
                   onClick={handleModificationRequest}
                   className="rounded-lg bg-yellow-500 px-4 py-2 text-sm text-white hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50"

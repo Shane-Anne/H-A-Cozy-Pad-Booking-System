@@ -44,6 +44,7 @@ try {
 
             u.unit_id,
             u.unit_name,
+            u.rate_per_night,
 
             bu.building_name,
             bu.location,
@@ -66,7 +67,11 @@ try {
             br.requested_check_in,
             br.requested_check_out,
             br.requested_guests,
-            br.requested_special_requests
+            br.requested_special_requests,
+            br.payment_amount AS modification_payment_amount,
+            br.refund_amount AS modification_refund_amount,
+            br.proof_of_payment AS modification_proof_of_payment,
+            br.payment_status AS modification_payment_status
 
          FROM bookings b
 

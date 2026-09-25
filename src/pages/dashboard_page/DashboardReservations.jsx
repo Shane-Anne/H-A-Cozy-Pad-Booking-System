@@ -15,6 +15,8 @@ export default function DashboardReservations() {
   const [customerError, setCustomerError] = useState('');
   const [paymentProof, setPaymentProof] = useState(null);
   const [isPaymentProofOpen, setIsPaymentProofOpen] = useState(false);
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [selectedModification, setSelectedModification] = useState(null);
   const [modificationChange, setModificationChange] = useState(null);
   const [updatingRequestId, setUpdatingRequestId] = useState(null);
 
@@ -55,17 +57,20 @@ export default function DashboardReservations() {
     setUpdatingBookingId(bookingId);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/update_booking_status.php`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookingId,
-          status,
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/update_booking_status.php`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            bookingId,
+            status,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -87,79 +92,114 @@ export default function DashboardReservations() {
     }
   };
 
-const handleModificationUpdate = async (requestId, action) => {
+  const handleModificationUpdate = async (requestId, action) => {
     setError('');
     setUpdatingRequestId(requestId);
 
     try {
-        const response = await fetch(
-            `${API_BASE_URL}/modify_request.php`,
-            {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    requestId: Number(requestId),
-                    action,
-                }),
-            }
-        );
-
-        const responseText = await response.text();
-
-        let data;
-
-        try {
-            data = JSON.parse(responseText);
-        } catch {
-            console.error(
-                'Invalid modify_request.php response:',
-                responseText
-            );
-
-            throw new Error(
-                'The server returned an invalid response.'
-            );
+      const response = await fetch(
+        `${API_BASE_URL}/modify_request.php`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            requestId: Number(requestId),
+            action,
+          }),
         }
+      );
 
-        if (!response.ok) {
-            throw new Error(
-                data.error ||
-                    'Unable to process modification request'
-            );
-        }
+      const responseText = await response.text();
 
-        await loadReservations(false);
-        setModificationChange(null);
-    } catch (modificationError) {
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
         console.error(
-            'Modification request error:',
-            modificationError
+          'Invalid modify_request.php response:',
+          responseText
         );
 
-        setError(modificationError.message);
-    } finally {
-        setUpdatingRequestId(null);
-    }
-};
+        throw new Error(
+          'The server returned an invalid response.'
+        );
+      }
 
-  const handleViewCustomer = async (bookingId) => {
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            'Unable to process modification request'
+        );
+      }
+
+      await loadReservations(false);
+      setModificationChange(null);
+      setSelectedModification(null);
+    } catch (modificationError) {
+      console.error(
+        'Modification request error:',
+        modificationError
+      );
+
+      setError(modificationError.message);
+    } finally {
+      setUpdatingRequestId(null);
+    }
+  };
+
+  const handleViewCustomer = async (reservation) => {
     setCustomerInfo(null);
     setCustomerError('');
+    setPaymentProof(null);
+    setPaymentDetails(null);
+    setIsPaymentProofOpen(false);
     setIsCustomerLoading(true);
+
+    const modificationPaymentAmount = Number(
+      reservation.modification_payment_amount ??
+        reservation.payment_amount ??
+        0
+    );
+
+    const modificationRefundAmount = Number(
+      reservation.modification_refund_amount ??
+        reservation.refund_amount ??
+        0
+    );
+
+    const modificationPaymentStatus =
+      reservation.modification_payment_status ??
+      reservation.payment_status ??
+      'not_required';
+
+    setPaymentDetails({
+      additionalPayment: modificationPaymentAmount,
+      refundAmount: modificationRefundAmount,
+      paymentStatus: modificationPaymentStatus,
+      hasAdditionalPayment: modificationPaymentAmount > 0,
+      hasRefund: modificationRefundAmount > 0,
+      modificationProof:
+        reservation.modification_proof_of_payment ?? null,
+    });
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/get_customer.php?bookingId=${bookingId}`,
-        { credentials: 'include' }
+        `${API_BASE_URL}/get_customer.php?bookingId=${reservation.booking_id}`,
+        {
+          credentials: 'include',
+        }
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Unable to load customer information');
+        throw new Error(
+          data.error || 'Unable to load customer information'
+        );
       }
 
       setCustomerInfo(data.customer);
@@ -172,17 +212,66 @@ const handleModificationUpdate = async (requestId, action) => {
 
   const handleViewPaymentProof = () => {
     if (!customerInfo?.proofOfPaymentPath) {
-      setCustomerError('No proof of payment was uploaded for this booking.');
+      setCustomerError(
+        'No proof of payment was uploaded for this booking.'
+      );
       return;
     }
 
-    setPaymentProof(`${API_BASE_URL}/${customerInfo.proofOfPaymentPath}`);
+    setPaymentProof(
+      `${API_BASE_URL}/${customerInfo.proofOfPaymentPath}`
+    );
+
+    setIsPaymentProofOpen(true);
+  };
+
+  const handleViewModificationPayment = (reservation) => {
+    const proofPath =
+      reservation.modification_proof_of_payment ??
+      reservation.modificationProof ??
+      null;
+
+    if (!proofPath) {
+      setError(
+        'No proof of payment was uploaded for this modification request.'
+      );
+      return;
+    }
+
+    const additionalPayment = Number(
+      reservation.modification_payment_amount ??
+        reservation.payment_amount ??
+        0
+    );
+
+    const refundAmount = Number(
+      reservation.modification_refund_amount ??
+        reservation.refund_amount ??
+        0
+    );
+
+    const paymentStatus =
+      reservation.modification_payment_status ??
+      reservation.payment_status ??
+      'not_required';
+
+    setPaymentDetails({
+      additionalPayment,
+      refundAmount,
+      paymentStatus,
+      hasAdditionalPayment: additionalPayment > 0,
+      hasRefund: refundAmount > 0,
+      modificationProof: proofPath,
+    });
+
+    setPaymentProof(`${API_BASE_URL}/${proofPath}`);
     setIsPaymentProofOpen(true);
   };
 
   const closeCustomerModal = () => {
     setCustomerInfo(null);
     setCustomerError('');
+    setPaymentDetails(null);
   };
 
   const closePaymentProofModal = () => {
@@ -190,21 +279,36 @@ const handleModificationUpdate = async (requestId, action) => {
     setPaymentProof(null);
   };
 
+  const closeModificationModal = () => {
+    setSelectedModification(null);
+  };
+
   const activeReservations = reservations.filter(
     (reservation) => reservation.status !== 'cancelled'
   );
 
   const visibleReservations = reservations.filter((reservation) => {
-    const start = new Date(`${reservation.check_in_date}T00:00:00`);
-    const end = new Date(`${reservation.check_out_date}T00:00:00`);
+    const start = new Date(
+      `${reservation.check_in_date}T00:00:00`
+    );
+
+    const end = new Date(
+      `${reservation.check_out_date}T00:00:00`
+    );
+
     const now = new Date();
 
     if (activeTab === 'all') return true;
 
     if (reservation.status === 'cancelled') return false;
 
-    if (activeTab === 'today') return start <= now && end > now;
-    if (activeTab === 'soon') return start > now;
+    if (activeTab === 'today') {
+      return start <= now && end > now;
+    }
+
+    if (activeTab === 'soon') {
+      return start > now;
+    }
 
     return true;
   });
@@ -214,6 +318,12 @@ const handleModificationUpdate = async (requestId, action) => {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+    });
+
+  const formatAmount = (amount) =>
+    Number(amount || 0).toLocaleString('en-PH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
 
   const statusClasses = {
@@ -327,7 +437,8 @@ const handleModificationUpdate = async (requestId, action) => {
                       </h2>
 
                       <p className="text-sm text-neutral-600">
-                        {reservation.unit_name} · {reservation.location}
+                        {reservation.unit_name} ·{' '}
+                        {reservation.location}
                       </p>
                     </div>
 
@@ -346,6 +457,7 @@ const handleModificationUpdate = async (requestId, action) => {
                       <p className="font-semibold text-neutral-900">
                         Stay dates
                       </p>
+
                       <p>
                         {formatDate(reservation.check_in_date)} to{' '}
                         {formatDate(reservation.check_out_date)}
@@ -356,10 +468,12 @@ const handleModificationUpdate = async (requestId, action) => {
                       <p className="font-semibold text-neutral-900">
                         Customer
                       </p>
+
                       <p>
                         {reservation.booked_guest_name ||
                           reservation.guest_name}
                       </p>
+
                       <p>
                         {reservation.booked_guest_contact_num ||
                           reservation.guest_contact_num}
@@ -370,6 +484,7 @@ const handleModificationUpdate = async (requestId, action) => {
                       <p className="font-semibold text-neutral-900">
                         Guests
                       </p>
+
                       <p>
                         {reservation.num_of_guests} guest
                         {Number(reservation.num_of_guests) === 1
@@ -383,123 +498,23 @@ const handleModificationUpdate = async (requestId, action) => {
                         <p className="font-semibold text-neutral-900">
                           Special request
                         </p>
+
                         <p>{reservation.special_requests}</p>
                       </div>
                     )}
                   </div>
 
                   {hasModification && (
-                    <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-amber-900">
-                          Modification Request
-                        </p>
-
-                        <span className="rounded-full bg-amber-200 px-3 py-1 text-xs font-semibold text-amber-900">
-                          Pending
-                        </span>
-                      </div>
-
-                      <div className="mt-4 space-y-3 text-sm">
-                        <div>
-                          <p className="font-semibold text-neutral-900">
-                            Current dates
-                          </p>
-                          <p className="text-neutral-600">
-                            {formatDate(reservation.check_in_date)} to{' '}
-                            {formatDate(reservation.check_out_date)}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="font-semibold text-neutral-900">
-                            Requested dates
-                          </p>
-                          <p className="text-neutral-600">
-                            {formatDate(
-                              reservation.requested_check_in
-                            )}{' '}
-                            to{' '}
-                            {formatDate(
-                              reservation.requested_check_out
-                            )}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="font-semibold text-neutral-900">
-                            Current guests
-                          </p>
-                          <p className="text-neutral-600">
-                            {reservation.num_of_guests}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="font-semibold text-neutral-900">
-                            Requested guests
-                          </p>
-                          <p className="text-neutral-600">
-                            {reservation.requested_guests}
-                          </p>
-                        </div>
-
-                        {reservation.requested_special_requests && (
-                          <div>
-                            <p className="font-semibold text-neutral-900">
-                              Requested special request
-                            </p>
-                            <p className="text-neutral-600">
-                              {reservation.requested_special_requests}
-                            </p>
-                          </div>
-                        )}
-
-                        <div>
-                          <p className="font-semibold text-neutral-900">
-                            Reason
-                          </p>
-                          <p className="text-neutral-600">
-                            {reservation.modification_reason}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex gap-3 border-t border-amber-200 pt-4">
-                        <button
-                          type="button"
-                          disabled={isUpdatingModification}
-                          onClick={() =>
-                            setModificationChange({
-                              requestId:
-                                Number(
-                                  reservation.modification_request_id
-                                ),
-                              action: 'approve',
-                            })
-                          }
-                          className="flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Approve Change
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled={isUpdatingModification}
-                          onClick={() =>
-                            setModificationChange({
-                              requestId:
-                                Number(
-                                  reservation.modification_request_id
-                                ),
-                              action: 'reject',
-                            })
-                          }
-                          className="flex-1 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Reject Change
-                        </button>
-                      </div>
+                    <div className="mt-5 border-t border-neutral-100 pt-4">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedModification(reservation)
+                        }
+                        className="w-full rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
+                      >
+                        View Modification Request
+                      </button>
                     </div>
                   )}
 
@@ -508,7 +523,7 @@ const handleModificationUpdate = async (requestId, action) => {
                       <button
                         type="button"
                         onClick={() =>
-                          handleViewCustomer(reservation.booking_id)
+                          handleViewCustomer(reservation)
                         }
                         className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                       >
@@ -545,7 +560,9 @@ const handleModificationUpdate = async (requestId, action) => {
                               }}
                               className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              {isUpdating ? 'Updating...' : 'Approve'}
+                              {isUpdating
+                                ? 'Updating...'
+                                : 'Approve'}
                             </button>
                           )}
 
@@ -577,7 +594,9 @@ const handleModificationUpdate = async (requestId, action) => {
                               }}
                               className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              {isUpdating ? 'Updating...' : 'Reject'}
+                              {isUpdating
+                                ? 'Updating...'
+                                : 'Reject'}
                             </button>
                           )}
                         </>
@@ -606,6 +625,251 @@ const handleModificationUpdate = async (requestId, action) => {
           </div>
         )}
       </main>
+
+      {selectedModification && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-5 py-6">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-neutral-200 p-6">
+              <div>
+                <h2 className="text-xl font-semibold text-neutral-900">
+                  Modification Request
+                </h2>
+
+                <p className="mt-1 text-sm text-neutral-500">
+                  Review the customer's requested booking changes.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeModificationModal}
+                className="text-2xl leading-none text-neutral-400 hover:text-neutral-700"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-6">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-amber-900">
+                    Pending Modification
+                  </p>
+
+                  <span className="rounded-full bg-amber-200 px-3 py-1 text-xs font-semibold text-amber-900">
+                    Pending
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div className="rounded-xl border border-neutral-200 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    Current dates
+                  </p>
+
+                  <p className="mt-1 text-sm text-neutral-600">
+                    {formatDate(
+                      selectedModification.check_in_date
+                    )}{' '}
+                    to{' '}
+                    {formatDate(
+                      selectedModification.check_out_date
+                    )}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-neutral-200 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    Requested dates
+                  </p>
+
+                  <p className="mt-1 text-sm text-neutral-600">
+                    {formatDate(
+                      selectedModification.requested_check_in
+                    )}{' '}
+                    to{' '}
+                    {formatDate(
+                      selectedModification.requested_check_out
+                    )}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-neutral-200 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    Current guests
+                  </p>
+
+                  <p className="mt-1 text-sm text-neutral-600">
+                    {selectedModification.num_of_guests} guest
+                    {Number(
+                      selectedModification.num_of_guests
+                    ) === 1
+                      ? ''
+                      : 's'}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-neutral-200 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    Requested guests
+                  </p>
+
+                  <p className="mt-1 text-sm text-neutral-600">
+                    {selectedModification.requested_guests} guest
+                    {Number(
+                      selectedModification.requested_guests
+                    ) === 1
+                      ? ''
+                      : 's'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-5">
+                <div className="rounded-xl border border-neutral-200 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    Requested special request
+                  </p>
+
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
+                    {selectedModification.requested_special_requests ||
+                      'No special request provided.'}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-neutral-200 p-4">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    Reason
+                  </p>
+
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
+                    {selectedModification.modification_reason ||
+                      selectedModification.request_reason ||
+                      'N/A'}
+                  </p>
+                </div>
+
+                {Number(
+                  selectedModification.modification_payment_amount ??
+                    selectedModification.payment_amount ??
+                    0
+                ) > 0 && (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                    <p className="font-semibold text-blue-900">
+                      Additional Payment
+                    </p>
+
+                    <p className="mt-1 text-2xl font-bold text-blue-900">
+                      ₱
+                      {formatAmount(
+                        selectedModification.modification_payment_amount ??
+                          selectedModification.payment_amount
+                      )}
+                    </p>
+
+                    <p className="mt-2 text-xs capitalize text-blue-700">
+                      Payment status:{' '}
+                      {(
+                        selectedModification.modification_payment_status ??
+                        selectedModification.payment_status ??
+                        'pending'
+                      ).replaceAll('_', ' ')}
+                    </p>
+
+                    {selectedModification.modification_proof_of_payment ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleViewModificationPayment(
+                            selectedModification
+                          )
+                        }
+                        className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                      >
+                        Show Payment Proof
+                      </button>
+                    ) : (
+                      <p className="mt-3 text-sm font-medium text-red-600">
+                        No payment proof uploaded.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {Number(
+                  selectedModification.modification_refund_amount ??
+                    selectedModification.refund_amount ??
+                    0
+                ) > 0 && (
+                  <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
+                    <p className="font-semibold text-purple-900">
+                      Refund Amount
+                    </p>
+
+                    <p className="mt-1 text-2xl font-bold text-purple-900">
+                      ₱
+                      {formatAmount(
+                        selectedModification.modification_refund_amount ??
+                          selectedModification.refund_amount
+                      )}
+                    </p>
+
+                    <p className="mt-2 text-sm text-purple-700">
+                      A refund is required because the requested
+                      booking is lower in total cost.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 border-t border-neutral-200 p-6">
+              <button
+                type="button"
+                disabled={
+                  updatingRequestId ===
+                  Number(
+                    selectedModification.modification_request_id
+                  )
+                }
+                onClick={() =>
+                  setModificationChange({
+                    requestId: Number(
+                      selectedModification.modification_request_id
+                    ),
+                    action: 'reject',
+                  })
+                }
+                className="flex-1 rounded-lg border border-red-200 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Reject Change
+              </button>
+
+              <button
+                type="button"
+                disabled={
+                  updatingRequestId ===
+                  Number(
+                    selectedModification.modification_request_id
+                  )
+                }
+                onClick={() =>
+                  setModificationChange({
+                    requestId: Number(
+                      selectedModification.modification_request_id
+                    ),
+                    action: 'approve',
+                  })
+                }
+                className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Approve Change
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {statusChange && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
@@ -645,6 +909,7 @@ const handleModificationUpdate = async (requestId, action) => {
                     statusChange.bookingId,
                     statusChange.newStatus
                   );
+
                   setStatusChange(null);
                 }}
                 disabled={
@@ -662,7 +927,7 @@ const handleModificationUpdate = async (requestId, action) => {
       )}
 
       {modificationChange && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-5">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-semibold text-neutral-900">
               {modificationChange.action === 'approve'
@@ -740,6 +1005,7 @@ const handleModificationUpdate = async (requestId, action) => {
                   <p className="font-semibold text-neutral-900">
                     Full Name
                   </p>
+
                   <p className="text-neutral-600">
                     {customerInfo.fullName}
                   </p>
@@ -749,6 +1015,7 @@ const handleModificationUpdate = async (requestId, action) => {
                   <p className="font-semibold text-neutral-900">
                     Contact Number
                   </p>
+
                   <p className="text-neutral-600">
                     {customerInfo.contactNum}
                   </p>
@@ -758,6 +1025,7 @@ const handleModificationUpdate = async (requestId, action) => {
                   <p className="font-semibold text-neutral-900">
                     Email
                   </p>
+
                   <p className="text-neutral-600">
                     {customerInfo.email}
                   </p>
@@ -767,16 +1035,59 @@ const handleModificationUpdate = async (requestId, action) => {
                   <p className="font-semibold text-neutral-900">
                     Booking Status
                   </p>
+
                   <p className="capitalize text-neutral-600">
-                    {customerInfo.bookingStatus?.replaceAll('_', ' ')}
+                    {customerInfo.bookingStatus?.replaceAll(
+                      '_',
+                      ' '
+                    )}
                   </p>
                 </div>
+
+                {paymentDetails?.hasAdditionalPayment && (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                    <p className="font-semibold text-blue-900">
+                      Additional Payment Required
+                    </p>
+
+                    <p className="mt-1 text-2xl font-bold text-blue-900">
+                      ₱
+                      {formatAmount(
+                        paymentDetails.additionalPayment
+                      )}
+                    </p>
+
+                    <p className="mt-2 text-xs capitalize text-blue-700">
+                      Payment status:{' '}
+                      {paymentDetails.paymentStatus.replaceAll(
+                        '_',
+                        ' '
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {paymentDetails?.hasRefund && (
+                  <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
+                    <p className="font-semibold text-purple-900">
+                      Refund Required
+                    </p>
+
+                    <p className="mt-1 text-2xl font-bold text-purple-900">
+                      ₱
+                      {formatAmount(
+                        paymentDetails.refundAmount
+                      )}
+                    </p>
+                  </div>
+                )}
 
                 {customerInfo.bookingStatus === 'cancelled' && (
                   <div>
                     <p className="font-semibold text-neutral-900">
                       Cancellation Reason
                     </p>
+
                     <p className="text-neutral-600">
                       {customerInfo.cancellationReason ||
                         'No reason provided.'}
@@ -817,12 +1128,26 @@ const handleModificationUpdate = async (requestId, action) => {
       )}
 
       {isPaymentProofOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-5">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-5">
           <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-900">
-                Proof of Payment
-              </h2>
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-900">
+                  Proof of Payment
+                </h2>
+
+                {paymentDetails?.hasAdditionalPayment && (
+                  <p className="mt-1 text-sm text-blue-700">
+                    Additional payment:{' '}
+                    <span className="font-bold">
+                      ₱
+                      {formatAmount(
+                        paymentDetails.additionalPayment
+                      )}
+                    </span>
+                  </p>
+                )}
+              </div>
 
               <button
                 type="button"
