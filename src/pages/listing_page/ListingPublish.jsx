@@ -92,6 +92,33 @@ export default function ListingPublish() {
       return;
     }
 
+    /*
+     * Make sure listing availability was selected.
+     */
+    if (
+      !draft.availableFrom ||
+      !draft.availableUntil
+    ) {
+      setError(
+        'Please select when the listing can be booked.'
+      );
+      return;
+    }
+
+    /*
+     * Make sure the end date is not before
+     * the start date.
+     */
+    if (
+      draft.availableUntil <
+      draft.availableFrom
+    ) {
+      setError(
+        'The availability end date cannot be before the start date.'
+      );
+      return;
+    }
+
     setIsPublishing(true);
     setError('');
 
@@ -163,12 +190,27 @@ export default function ListingPublish() {
         draft.maxGuests || ''
       );
 
-
       formData.append(
         'ratePerNight',
         draft.ratePerNight || ''
       );
 
+      /*
+       * Listing availability
+       */
+      formData.append(
+        'availableFrom',
+        draft.availableFrom
+      );
+
+      formData.append(
+        'availableUntil',
+        draft.availableUntil
+      );
+
+      /*
+       * Amenities
+       */
       (draft.amenities || []).forEach(
         (amenity) => {
           formData.append(
@@ -178,6 +220,9 @@ export default function ListingPublish() {
         }
       );
 
+      /*
+       * Images
+       */
       images.forEach((image) => {
         formData.append(
           'images[]',
@@ -203,6 +248,7 @@ export default function ListingPublish() {
       if (!response.ok) {
         throw new Error(
           result.error ||
+            result.message ||
             'Unable to publish listing'
         );
       }
@@ -353,7 +399,9 @@ export default function ListingPublish() {
           {/* Back */}
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() =>
+              window.history.back()
+            }
             className="
               w-[142px]
               h-[50px]

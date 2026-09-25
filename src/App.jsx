@@ -30,7 +30,6 @@ import Chatbot from './components/Chatbot';
 // listing pages
 import PlaceOffer from './pages/listing_page/PlaceOffer';
 import UnitListing from './pages/listing_page/UnitListing';
-import PropertyDescription from './pages/listing_page/PropertyDescription';
 import PlaceDescription from './pages/listing_page/PlaceDescription';
 import PlaceLocation from './pages/listing_page/PlaceLocation';
 import PlaceRate from './pages/listing_page/PlaceRate';
@@ -128,7 +127,6 @@ export default function App() {
           <Route path="/host/reservations" element={<DashboardReservations />} /> 
           <Route path="/host/calendar" element={<DashboardCalendar />} />
           <Route path="/host/listing" element={<UnitListing />} />
-          <Route path="/host/listing/PropertyDescription" element={<PropertyDescription />} />
           <Route path="/host/listing/PlaceDescription" element={<PlaceDescription />} />
           <Route path="/host/listing/PlaceOffer" element={<PlaceOffer />} />
           <Route path="/host/listing/PlaceLocation" element={<PlaceLocation />} />
@@ -154,10 +152,6 @@ export default function App() {
           <Route path="/host/calendar" element={<DashboardCalendar />} />
           <Route path="/host/faqs" element={<FaqManagement />} />
           <Route path="/host/listing" element={<UnitListing />} />
-          <Route
-            path="/host/listing/PropertyDescription"
-            element={<PropertyDescription />}
-          />
           <Route
             path="/host/listing/PlaceDescription"
             element={<PlaceDescription />}
