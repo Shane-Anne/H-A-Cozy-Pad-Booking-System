@@ -38,6 +38,14 @@ $ratePerNight = (float) (
     $data['ratePerNight'] ?? 0
 );
 
+$availableFrom = trim(
+    $data['availableFrom'] ?? ''
+);
+
+$availableUntil = trim(
+    $data['availableUntil'] ?? ''
+);
+
 $amenities = $data['amenities'] ?? [];
 
 
@@ -96,6 +104,57 @@ if (
 
     echo json_encode([
         'error' => 'Complete the required listing fields'
+    ]);
+
+    exit;
+}
+
+
+if (
+    $availableFrom === '' ||
+    $availableUntil === ''
+) {
+    http_response_code(400);
+
+    echo json_encode([
+        'error' => 'Please select when the listing can be booked.'
+    ]);
+
+    exit;
+}
+
+
+$fromDate = DateTime::createFromFormat(
+    'Y-m-d',
+    $availableFrom
+);
+
+$untilDate = DateTime::createFromFormat(
+    'Y-m-d',
+    $availableUntil
+);
+
+if (
+    !$fromDate ||
+    !$untilDate ||
+    $fromDate->format('Y-m-d') !== $availableFrom ||
+    $untilDate->format('Y-m-d') !== $availableUntil
+) {
+    http_response_code(400);
+
+    echo json_encode([
+        'error' => 'Invalid availability dates'
+    ]);
+
+    exit;
+}
+
+
+if ($availableUntil < $availableFrom) {
+    http_response_code(400);
+
+    echo json_encode([
+        'error' => 'The availability end date cannot be before the start date.'
     ]);
 
     exit;
@@ -203,9 +262,11 @@ try {
             unit_name,
             description,
             max_guests,
-            rate_per_night
+            rate_per_night,
+            available_from,
+            available_until
         )
-        VALUES (?, ?, ?, ?, ?)'
+        VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
 
     $unit->execute([
@@ -214,6 +275,8 @@ try {
         $description,
         $maxGuests,
         $ratePerNight,
+        $availableFrom,
+        $availableUntil,
     ]);
 
     $unitId = $pdo->lastInsertId();
@@ -403,13 +466,6 @@ try {
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Require at least one image
-    |--------------------------------------------------------------------------
-    */
-
     if (
         count($uploadedImages) === 0
     ) {
@@ -426,6 +482,8 @@ try {
         'unitId' => (int) $unitId,
         'propertyCategory' => $propertyCategory,
         'unitName' => $unitName,
+        'availableFrom' => $availableFrom,
+        'availableUntil' => $availableUntil,
         'images' => $uploadedImages,
     ]);
 

@@ -97,7 +97,7 @@ export default function UnitListing() {
       propertyCategory: selectedProperty,
     });
 
-    navigate('/host/listing/PropertyDescription');
+    navigate('/host/listing/PlaceDescription');
   };
 
   return (

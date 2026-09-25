@@ -12,7 +12,7 @@ export default function PropertySection({ title, properties = [] }) {
     <section className="px-4 md:px-8 lg:px-10 py-6">
       {title && (
         <div className="flex items-center gap-3 mb-7">
-          <h2 className="text-2xl lg:text-[27px] font-medium">
+          <h2 className="text-xl lg:text-2xl font-medium">
             {title}
           </h2>
 
@@ -23,7 +23,7 @@ export default function PropertySection({ title, properties = [] }) {
       )}
 
       {properties.length === 0 ? (
-        <div className="min-h-[240px] flex flex-col items-center justify-center text-center text-neutral-500">
+        <div className="min-h-60 flex flex-col items-center justify-center text-center text-neutral-500">
           <svg
             aria-hidden="true"
             className="w-12 h-12 mb-4 text-neutral-400"
@@ -39,7 +39,7 @@ export default function PropertySection({ title, properties = [] }) {
             <path d="M9 20v-6h6v6" />
           </svg>
 
-          <p className="text-3xl lg:text-4xl font-medium">
+          <p className="text-2xl lg:text-3xl font-medium">
             No available housing
           </p>
 
@@ -48,7 +48,7 @@ export default function PropertySection({ title, properties = [] }) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-7">
           {properties.map((property) => {
             // First uploaded image = homepage thumbnail
             const thumbnail =
@@ -82,7 +82,7 @@ export default function PropertySection({ title, properties = [] }) {
                   {/* Property Details */}
                   <div className="mt-3">
                     <div className="flex justify-between items-start gap-2">
-                      <h3 className="text-xl lg:text-2xl font-normal leading-tight">
+                      <h3 className="text-base lg:text-lg font-normal leading-tight">
                         {property.unit_name}
                       </h3>
 
@@ -93,11 +93,11 @@ export default function PropertySection({ title, properties = [] }) {
                       )}
                     </div>
 
-                    <p className="text-base text-neutral-500 mt-0.5">
+                    <p className="text-sm text-neutral-500 mt-0.5">
                       {property.building_name} • {property.location}
                     </p>
 
-                    <p className="text-lg lg:text-xl font-light mt-1">
+                    <p className="text-base lg:text-lg font-light mt-1">
                       ₱{' '}
                       {Number(property.rate_per_night).toLocaleString(
                         'en-PH',
