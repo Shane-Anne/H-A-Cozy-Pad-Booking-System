@@ -37,6 +37,7 @@ import PlaceRate from './pages/listing_page/PlaceRate';
 import PlaceDiscount from './pages/listing_page/PlaceDiscount';
 import PlaceDetail from './pages/listing_page/PlaceDetail';
 import ListingPublish from './pages/listing_page/ListingPublish';
+import PlaceImages from './pages/listing_page/PlaceImages';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -112,9 +113,32 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/host/FaqManagement"
+          element={<FaqManagement />}
+        />
+
         <Route element={<ProtectedRoute user={user} isLoading={isLoading} />}>
           <Route path="/profile" element={<Profile user={user} />} />
         </Route>
+      
+    
+        <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['admin', 'assistant']} />}>
+          <Route path="/host/listings" element={<DashboardListings />} />
+          <Route path="/host/reservations" element={<DashboardReservations />} /> 
+          <Route path="/host/calendar" element={<DashboardCalendar />} />
+          <Route path="/host/listing" element={<UnitListing />} />
+          <Route path="/host/listing/PropertyDescription" element={<PropertyDescription />} />
+          <Route path="/host/listing/PlaceDescription" element={<PlaceDescription />} />
+          <Route path="/host/listing/PlaceOffer" element={<PlaceOffer />} />
+          <Route path="/host/listing/PlaceLocation" element={<PlaceLocation />} />
+          <Route path="/host/listing/PlaceRate" element={<PlaceRate />} />
+          <Route path="/host/listing/PlaceDiscount" element={<PlaceDiscount />} />
+          <Route path="/host/listing/PlaceDetail" element={<PlaceDetail />} />
+          <Route path="/host/listing/ListingPublish" element={<ListingPublish />} />
+          <Route path="/host/listing/PlaceImages" element={<PlaceImages />} />
+        </Route>
+        
 
         <Route
           element={
@@ -160,7 +184,7 @@ export default function App() {
           />
           <Route
             path="/host/listing/ListingPublish"
-            element={<ListingPublish />}
+            element={<ListingPublish />}   
           />
         </Route>
 
