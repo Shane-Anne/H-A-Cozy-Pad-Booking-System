@@ -66,10 +66,17 @@ function normalizeAmenities(amenities) {
 function formatAvailabilityDate(dateString) {
   if (!dateString) return '';
 
-  const [year, month, day] =
-    dateString.split('-');
+  const date = new Date(`${dateString}T00:00:00`);
 
-  return `${month}/${day}/${year}`;
+  if (Number.isNaN(date.getTime())) {
+    return dateString;
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
 }
 
 function formatPropertyCategory(category) {
@@ -587,7 +594,7 @@ export default function PropertyDetail({
                 </p>
 
                 <section className="mt-7 border-y border-neutral-200 py-6">
-                  <h2 className="text-xl font-bold mb-4">Property details</h2>
+                  <h2 className="text-lg font-semibold mb-4">Property details</h2>
 
                   <div className="grid grid-cols-2 gap-x-5 gap-y-4 text-sm sm:grid-cols-3">
                     <div>
