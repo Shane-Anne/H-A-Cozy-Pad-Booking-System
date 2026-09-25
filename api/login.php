@@ -1,6 +1,9 @@
 <?php
     require 'db.php';
+<<<<<<< HEAD
     session_start();
+=======
+>>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
 
     $data = json_decode(file_get_contents('php://input'), true);
 
@@ -13,7 +16,11 @@
         exit;
     }
 
+<<<<<<< HEAD
     $stmt = $pdo->prepare('SELECT user_id, full_name, email, password, role FROM users WHERE email = ?');
+=======
+    $stmt = $pdo->prepare('SELECT user_id, full_name, email, password, contact_num, role FROM users WHERE email = ?');
+>>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -26,6 +33,10 @@
     $_SESSION['user_id'] = $user['user_id'];
     $_SESSION['email'] = $user['email'];
     $_SESSION['role'] = $user['role'];
+<<<<<<< HEAD
+=======
+    $_SESSION['needs_setup'] = trim((string) ($user['contact_num'] ?? '')) === '';
+>>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
 
     echo json_encode([
         'success' => true,
@@ -34,6 +45,11 @@
             'fullName' => $user['full_name'],
             'email' => $user['email'],
             'role' => $user['role'],
+<<<<<<< HEAD
+=======
+            'contactNum' => $user['contact_num'],
+            'needsSetup' => $_SESSION['needs_setup'],
+>>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
         ],
     ]);
 ?>

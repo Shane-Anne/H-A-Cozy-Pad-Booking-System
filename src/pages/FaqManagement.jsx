@@ -726,6 +726,7 @@ export default function FaqManagement() {
                                 >
                                     Add category
                                 </button>
+<<<<<<< HEAD
 
                             </div>
 
@@ -737,6 +738,13 @@ export default function FaqManagement() {
 
             )}
 
+=======
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+>>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
         </div>
     );
 }
