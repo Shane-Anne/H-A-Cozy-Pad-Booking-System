@@ -113,6 +113,11 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/host/FaqManagement"
+          element={<FaqManagement />}
+        />
+
         <Route element={<ProtectedRoute user={user} isLoading={isLoading} />}>
           <Route path="/profile" element={<Profile user={user} />} />
         </Route>
