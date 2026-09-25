@@ -193,19 +193,9 @@ export default function PropertyDetail({
           : PLACEHOLDER_AMENITIES.slice(0, 8)
       );
 
-  // All uploaded images
   const propertyImages = Array.isArray(unit?.images)
     ? unit.images.filter(Boolean)
     : [];
-
-  /*
-   * ---------------------------------------------------------
-   * LISTING AVAILABILITY
-   * ---------------------------------------------------------
-   *
-   * The listing can only be selected for dates inside the
-   * availability period configured by the host.
-   */
 
   const availableFrom = unit?.available_from || '';
   const availableUntil = unit?.available_until || '';
@@ -745,10 +735,6 @@ export default function PropertyDetail({
 
             <hr className="border-neutral-200" />
 
-            {/* =====================================================
-                AMENITIES 
-            ====================================================== */}
-
             <section>
 
               <h2 className="text-xl font-bold mb-5">
@@ -793,10 +779,6 @@ export default function PropertyDetail({
             </section>
 
             <hr className="border-neutral-200" />
-
-            {/* =====================================================
-                REVIEWS
-            ====================================================== */}
 
             <section>
 
@@ -895,10 +877,7 @@ export default function PropertyDetail({
       <Footer />
       <Chatbot />
 
-      {/* =========================================================
-          FULL-SCREEN IMAGE VIEWER
-      ========================================================== */}
-
+    
       {selectedImageIndex !== null &&
         propertyImages.length > 0 && (
           <div
