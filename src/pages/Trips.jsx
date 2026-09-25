@@ -1,9 +1,31 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../lib/api";
+import Header from "../components/Header";
+import Footer from "../components/Footer_Lite";
+
+function CalendarIcon() {
+  return (
+    <svg className="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="17" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
+}
+
+function GuestIcon() {
+  return (
+    <svg className="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 21c.5-3.4 3-5.5 7-5.5s6.5 2.1 7 5.5" />
+    </svg>
+  );
+}
 
 export default function Trips() {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -27,6 +49,21 @@ export default function Trips() {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
+    function handleAuthChange(event) {
+      if (event.detail?.loggedIn && event.detail?.user) {
+        setUser(event.detail.user);
+      } else {
+        setUser(null);
+      }
+    }
+
+    fetch(`${API_BASE_URL}/check_auth.php`, { credentials: "include" })
+      .then((response) => response.json())
+      .then((data) => setUser(data.authenticated ? data.user : null))
+      .catch(() => setUser(null));
+
+    window.addEventListener("auth-changed", handleAuthChange);
+
     async function loadBookings() {
       try {
         setIsLoading(true);
@@ -56,6 +93,8 @@ export default function Trips() {
     }
 
     loadBookings();
+
+    return () => window.removeEventListener("auth-changed", handleAuthChange);
   }, []);
 
   function openModificationBox() {
@@ -244,149 +283,128 @@ export default function Trips() {
   }
 
   return (
-    <main className="min-h-screen bg-white px-5 py-12 text-black md:px-10">
-      <div className="mx-auto max-w-2xl">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="mb-8 text-sm underline"
-        >
-          Back to home
-        </button>
-
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold">
-            Your trips
-          </h1>
-
-          <div className="flex gap-2">
+    <div className="flex min-h-screen flex-col bg-[#fdfdfd] text-[#222]">
+      <Header
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+        user={user}
+        onLogout={() => setUser(null)}
+        onOpenSignIn={() => navigate("/")}
+        onOpenRegister={() => navigate("/")}
+      />
+      <main className="grow px-5 py-8 md:px-10 md:py-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-6 border-b border-gray-200 pb-8">
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-gray-500">
+                Your travel dashboard
+              </p>
+              <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Your trips</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-gray-600">
+                Keep track of upcoming stays, booking details, and requests in one place.
+              </p>
+            </div>
             <button
               type="button"
-              disabled={!selectedBooking}
-              className={`rounded-lg border px-4 py-2 text-sm transition ${
-                selectedBooking
-                  ? "border-red-600 bg-red-600 text-white hover:bg-red-700"
-                  : "border-red-500 bg-white text-red-600"
-              }`}
-              onClick={() => {
-                setError("");
-                setSuccessMessage("");
-                setShowCancelBox(true);
-              }}
+              onClick={() => navigate("/")}
+              className="mb-1 text-sm font-medium text-gray-600 transition hover:text-black"
             >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              disabled={!selectedBooking}
-              className={`rounded-lg border px-4 py-2 text-sm transition ${
-                selectedBooking
-                  ? "border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600"
-                  : "border-yellow-500 bg-white text-yellow-600"
-              }`}
-              onClick={openModificationBox}
-            >
-              Request to change
+              <span aria-hidden="true">←</span> Back to home
             </button>
           </div>
-        </div>
 
         {isLoading && (
-          <p className="mt-6 text-sm text-gray-500">
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-sm text-gray-500 shadow-sm">
             Loading your trips...
-          </p>
+          </div>
         )}
 
-        {error && (
-          <p className="mt-6 text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        {error && <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
 
         {successMessage && (
-          <p className="mt-6 text-sm text-green-600">
-            {successMessage}
-          </p>
+          <p className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">{successMessage}</p>
         )}
 
         {!isLoading && !error && bookings.length === 0 && (
-          <p className="mt-6 text-sm text-gray-500">
-            Your saved trips will appear here.
-          </p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
+            <p className="text-lg font-semibold">No trips yet</p>
+            <p className="mt-2 text-sm text-gray-500">Your saved trips will appear here.</p>
+          </div>
         )}
 
         {!isLoading && !error && bookings.length > 0 && (
-          <div className="mt-6 space-y-4">
-            {bookings.map((booking) => (
-              <label
-                key={booking.bookingId}
-                className={`block cursor-pointer rounded-xl border p-5 transition ${
-                  selectedBooking === booking.bookingId
-                    ? "border-black ring-1 ring-black"
-                    : "border-gray-200"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <input
-                    type="radio"
-                    name="selectedBooking"
-                    value={booking.bookingId}
-                    checked={selectedBooking === booking.bookingId}
-                    onChange={() =>
-                      setSelectedBooking(booking.bookingId)
-                    }
-                    className="mt-1 h-4 w-4"
-                  />
+          <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+            <section>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold">All bookings</h2>
+                <span className="text-xs text-gray-500">{bookings.length} total</span>
+              </div>
+              <div className="space-y-3">
+                {bookings.map((booking) => (
+                  <label
+                    key={booking.bookingId}
+                    className={`block cursor-pointer rounded-xl border bg-white p-4 transition hover:border-gray-400 ${
+                      selectedBooking === booking.bookingId ? "border-black shadow-sm" : "border-gray-200"
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      <input
+                        type="radio"
+                        name="selectedBooking"
+                        value={booking.bookingId}
+                        checked={selectedBooking === booking.bookingId}
+                        onChange={() => setSelectedBooking(booking.bookingId)}
+                        className="mt-1 h-4 w-4 accent-black"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold">Booking #{booking.bookingId}</p>
+                        <p className="mt-1 truncate text-sm text-gray-600">{booking.unitName || "Cozy Pad stay"}</p>
+                        <p className="mt-3 text-xs text-gray-500">{booking.checkIn} - {booking.checkOut}</p>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </section>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="font-semibold">
-                          Booking #{booking.bookingId}
-                        </p>
-
-                        {booking.unitName && (
-                          <p className="mt-1 text-sm text-gray-700">
-                            {booking.unitName}
-                          </p>
-                        )}
+            <section className="min-h-107.5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-9">
+              {selectedBooking ? (
+                (() => {
+                  const booking = bookings.find((item) => item.bookingId === selectedBooking);
+                  return (
+                    <>
+                      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 pb-7">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Booking #{booking.bookingId}</p>
+                          <h2 className="mt-2 text-3xl font-semibold tracking-tight">{booking.unitName || "Your Cozy Pad stay"}</h2>
+                        </div>
+                        <span className="rounded-full bg-[#fff0c2] px-3 py-1.5 text-xs font-semibold capitalize text-[#765400]">{booking.status.replaceAll("_", " ")}</span>
                       </div>
 
-                      <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs text-yellow-800 capitalize">
-                        {booking.status.replaceAll("_", " ")}
-                      </span>
-                    </div>
+                      <div className="grid gap-6 border-b border-gray-200 py-8 sm:grid-cols-3">
+                        <div><div className="flex items-center gap-2"><CalendarIcon /><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Check-in</p></div><p className="mt-2 pl-7 font-medium">{booking.checkIn}</p></div>
+                        <div><div className="flex items-center gap-2"><CalendarIcon /><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Check-out</p></div><p className="mt-2 pl-7 font-medium">{booking.checkOut}</p></div>
+                        <div><div className="flex items-center gap-2"><GuestIcon /><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Guests</p></div><p className="mt-2 pl-7 font-medium">{booking.guests}</p></div>
+                      </div>
 
-                    <div className="mt-4 space-y-1 text-sm text-gray-500">
-                      <p>
-                        Check-in: {booking.checkIn}
-                      </p>
+                      <div className="grid gap-4 py-7 text-sm sm:grid-cols-2">
+                        {booking.guestName && <p><span className="text-gray-500">Guest</span><br /><span className="mt-1 inline-block font-medium">{booking.guestName}</span></p>}
+                        {booking.vehicleType && <p><span className="text-gray-500">Vehicle</span><br /><span className="mt-1 inline-block font-medium">{booking.vehicleType}</span></p>}
+                      </div>
 
-                      <p>
-                        Check-out: {booking.checkOut}
-                      </p>
-
-                      <p>
-                        Guests: {booking.guests}
-                      </p>
-                    </div>
-
-                    {booking.guestName && (
-                      <p className="mt-3 text-sm text-gray-600">
-                        Guest: {booking.guestName}
-                      </p>
-                    )}
-
-                    {booking.vehicleType && (
-                      <p className="mt-1 text-sm text-gray-600">
-                        Vehicle: {booking.vehicleType}
-                      </p>
-                    )}
-                  </div>
+                      <div className="flex flex-wrap gap-3">
+                        <button type="button" onClick={openModificationBox} className="rounded-lg bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800">Request to change</button>
+                        <button type="button" onClick={() => { setError(""); setSuccessMessage(""); setShowCancelBox(true); }} className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-semibold transition hover:border-red-500 hover:text-red-600">Cancel booking</button>
+                      </div>
+                    </>
+                  );
+                })()
+              ) : (
+                <div className="flex h-full min-h-90 items-center justify-center text-center">
+                  <div><p className="text-xl font-semibold">Select a trip to view details</p><p className="mt-2 text-sm text-gray-500">Your booking information and actions will appear here.</p></div>
                 </div>
-              </label>
-            ))}
+              )}
+            </section>
           </div>
         )}
 
@@ -584,6 +602,8 @@ export default function Trips() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+      <Footer />
+    </div>
   );
 }

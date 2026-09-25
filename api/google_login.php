@@ -45,6 +45,12 @@ if (!$user) {
     ];
 }
 
+if (trim((string) ($user['role'] ?? '')) === '') {
+    $setDefaultRole = $pdo->prepare('UPDATE users SET role = ? WHERE user_id = ?');
+    $setDefaultRole->execute(['customer', $user['user_id']]);
+    $user['role'] = 'customer';
+}
+
 if ($user['contact_num'] === '00000000000') {
     $clearPlaceholder = $pdo->prepare('UPDATE users SET contact_num = ? WHERE user_id = ?');
     $clearPlaceholder->execute(['', $user['user_id']]);
