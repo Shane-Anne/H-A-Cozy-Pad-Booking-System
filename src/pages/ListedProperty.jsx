@@ -63,6 +63,15 @@ function normalizeAmenities(amenities) {
     }));
 }
 
+function formatAvailabilityDate(dateString) {
+  if (!dateString) return '';
+
+  const [year, month, day] =
+    dateString.split('-');
+
+  return `${month}/${day}/${year}`;
+}
+
 const PLACEHOLDER_REVIEWS = Array.from(
   { length: 6 },
   (_, i) => ({
@@ -189,15 +198,73 @@ export default function PropertyDetail({
     ? unit.images.filter(Boolean)
     : [];
 
+  /*
+   * ---------------------------------------------------------
+   * LISTING AVAILABILITY
+   * ---------------------------------------------------------
+   *
+   * The listing can only be selected for dates inside the
+   * availability period configured by the host.
+   */
+
+  const availableFrom = unit?.available_from || '';
+  const availableUntil = unit?.available_until || '';
+
+  const hasListingAvailability =
+    Boolean(
+      availableFrom &&
+      availableUntil
+    );
+
+  const isSelectedDatesInsideListingAvailability =
+    hasListingAvailability &&
+    checkIn &&
+    checkOut &&
+    checkIn >= availableFrom &&
+    checkOut <= availableUntil;
+
   useEffect(() => {
-    if (
-      !unit ||
-      !checkIn ||
-      !checkOut ||
-      checkOut <= checkIn
-    ) {
+    if (!unit || !checkIn || !checkOut) {
       setIsDateRangeAvailable(null);
       setAvailabilityError('');
+      return undefined;
+    }
+
+    if (!hasListingAvailability) {
+      setIsDateRangeAvailable(false);
+      setAvailabilityError(
+        'This listing does not currently have a valid availability period.'
+      );
+      return undefined;
+    }
+
+    if (checkOut <= checkIn) {
+      setIsDateRangeAvailable(null);
+      setAvailabilityError('');
+      return undefined;
+    }
+
+    if (checkIn < availableFrom) {
+      setIsDateRangeAvailable(false);
+      setAvailabilityError(
+        `This listing is only available from ${formatAvailabilityDate(
+          availableFrom
+        )} to ${formatAvailabilityDate(
+          availableUntil
+        )}.`
+      );
+      return undefined;
+    }
+
+    if (checkOut > availableUntil) {
+      setIsDateRangeAvailable(false);
+      setAvailabilityError(
+        `This listing is only available from ${formatAvailabilityDate(
+          availableFrom
+        )} to ${formatAvailabilityDate(
+          availableUntil
+        )}.`
+      );
       return undefined;
     }
 
@@ -205,6 +272,7 @@ export default function PropertyDetail({
       new AbortController();
 
     setAvailabilityError('');
+    setIsDateRangeAvailable(null);
 
     fetch(
       `${API_BASE_URL}/check_availability.php?unit_id=${encodeURIComponent(
@@ -250,12 +318,49 @@ export default function PropertyDetail({
 
     return () =>
       controller.abort();
-  }, [unit, checkIn, checkOut]);
+  }, [
+    unit,
+    checkIn,
+    checkOut,
+    availableFrom,
+    availableUntil,
+    hasListingAvailability,
+  ]);
+
+  const handleCheckInChange = (event) => {
+    const value = event.target.value;
+
+    setCheckIn(value);
+
+    if (
+      availableUntil &&
+      checkOut &&
+      checkOut > availableUntil
+    ) {
+      setCheckOut('');
+    }
+
+    if (
+      availableUntil &&
+      value >= availableUntil &&
+      checkOut &&
+      checkOut <= value
+    ) {
+      setCheckOut('');
+    }
+  };
+
+  const handleCheckOutChange = (event) => {
+    const value = event.target.value;
+
+    setCheckOut(value);
+  };
 
   const handleReserve = () => {
     if (
       !unit ||
-      isDateRangeAvailable !== true
+      isDateRangeAvailable !== true ||
+      !isSelectedDatesInsideListingAvailability
     ) {
       return;
     }
@@ -318,11 +423,6 @@ export default function PropertyDetail({
         {/* Listing */}
         {!loading && !error && unit && (
           <div className="max-w-[1200px] mx-auto flex flex-col gap-10">
-
-            {/* =====================================================
-                TITLE
-            ====================================================== */}
-
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">
                 {unit.building_name}
@@ -333,10 +433,6 @@ export default function PropertyDetail({
                 {unit.location}
               </p>
             </div>
-
-            {/* =====================================================
-                IMAGE GALLERY + MAP
-            ====================================================== */}
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
 
@@ -499,6 +595,31 @@ export default function PropertyDetail({
                   </span>
                 </p>
 
+                {/* Listing availability */}
+                <div className="mb-4 rounded-lg bg-neutral-50 border border-neutral-200 px-3 py-2">
+
+                  <p className="text-[11px] text-neutral-500 uppercase mb-1">
+                    Available dates
+                  </p>
+
+                  {hasListingAvailability ? (
+                    <p className="text-sm text-neutral-800">
+                      {formatAvailabilityDate(
+                        availableFrom
+                      )}{' '}
+                      to{' '}
+                      {formatAvailabilityDate(
+                        availableUntil
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-red-600">
+                      Availability period not configured
+                    </p>
+                  )}
+
+                </div>
+
                 {/* Dates */}
                 <div className="grid grid-cols-2 gap-2 mb-3">
 
@@ -511,12 +632,11 @@ export default function PropertyDetail({
                     <input
                       type="date"
                       value={checkIn}
-                      onChange={(event) =>
-                        setCheckIn(
-                          event.target.value
-                        )
-                      }
-                      className="bg-transparent outline-none text-sm"
+                      min={availableFrom || undefined}
+                      max={availableUntil || undefined}
+                      disabled={!hasListingAvailability}
+                      onChange={handleCheckInChange}
+                      className="bg-transparent outline-none text-sm disabled:text-neutral-400"
                     />
 
                   </label>
@@ -530,12 +650,16 @@ export default function PropertyDetail({
                     <input
                       type="date"
                       value={checkOut}
-                      onChange={(event) =>
-                        setCheckOut(
-                          event.target.value
-                        )
+                      min={
+                        checkIn &&
+                        checkIn >= availableFrom
+                          ? checkIn
+                          : availableFrom || undefined
                       }
-                      className="bg-transparent outline-none text-sm"
+                      max={availableUntil || undefined}
+                      disabled={!hasListingAvailability}
+                      onChange={handleCheckOutChange}
+                      className="bg-transparent outline-none text-sm disabled:text-neutral-400"
                     />
 
                   </label>
@@ -576,6 +700,8 @@ export default function PropertyDetail({
                   disabled={
                     unit.status !==
                       'available' ||
+                    !hasListingAvailability ||
+                    !isSelectedDatesInsideListingAvailability ||
                     isDateRangeAvailable !==
                       true
                   }
@@ -584,6 +710,10 @@ export default function PropertyDetail({
                   {unit.status !==
                   'available'
                     ? 'Unavailable'
+                    : !hasListingAvailability
+                    ? 'Unavailable'
+                    : availabilityError
+                    ? 'Dates unavailable'
                     : isDateRangeAvailable ===
                       false
                     ? 'Dates unavailable'
@@ -616,7 +746,7 @@ export default function PropertyDetail({
             <hr className="border-neutral-200" />
 
             {/* =====================================================
-                AMENITIES
+                AMENITIES 
             ====================================================== */}
 
             <section>
@@ -775,6 +905,7 @@ export default function PropertyDetail({
             className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
             onClick={() => setSelectedImageIndex(null)}
           >
+
             {/* Close button */}
             <button
               type="button"
@@ -846,6 +977,7 @@ export default function PropertyDetail({
             <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 bg-black/60 text-white px-4 py-2 rounded-full text-sm">
               {selectedImageIndex + 1} / {propertyImages.length}
             </div>
+
           </div>
         )}
 

@@ -19,6 +19,8 @@ $stmt = $pdo->query(
         u.max_guests,
         u.rate_per_night,
         u.status,
+        u.available_from,
+        u.available_until,
 
         GROUP_CONCAT(
             DISTINCT a.amenity_name
@@ -61,7 +63,9 @@ $stmt = $pdo->query(
         u.description,
         u.max_guests,
         u.rate_per_night,
-        u.status
+        u.status,
+        u.available_from,
+        u.available_until
 
     ORDER BY u.created_at DESC"
 );
@@ -86,6 +90,5 @@ foreach ($listings as &$listing) {
 }
 
 unset($listing);
-
 
 echo json_encode($listings);
