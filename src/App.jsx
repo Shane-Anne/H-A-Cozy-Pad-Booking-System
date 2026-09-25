@@ -1,171 +1,33 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-import Header from './components/Header';
-import SearchSection from './components/SearchSection';
-import PropertySection from './components/PropertySection';
-import Footer from './components/Footer';
-import AuthModal from './components/AuthModal';
-import RegisterModal from './components/RegisterModal';
-import Chatbot from './components/Chatbot'; 
-
-import DashboardListings from './pages/DashboardListings';
-import DashboardReservations from './pages/DashboardReservations';
-import HelpCenter from './pages/HelpCenter';
-import FaqManagement from './pages/FaqManagement';
-
-function HomePage({
-    onOpenSignIn,
-    onOpenRegister,
-    isMenuOpen,
-    setIsMenuOpen,
-}) {
-    return (
-        <div className="bg-white text-black font-sans min-h-screen flex flex-col">
-            <Header
-                isMenuOpen={isMenuOpen}
-                setIsMenuOpen={setIsMenuOpen}
-                onOpenSignIn={onOpenSignIn}
-                onOpenRegister={onOpenRegister}
-            />
-
-            <main className="grow">
-                <SearchSection />
-                <PropertySection title="Popular Homes Nearby" />
-                <PropertySection title="Popular Homes in Philippines" />
-            </main>
-
-            <Footer />
-        </div>
-    );
-}
-
-export default function App() {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-    const [isChatOpen, setIsChatOpen] = useState(false); // 💬 State for floating chatbot
-
-    const handleOpenAuth = () => {
-        setIsRegisterModalOpen(false);
-        setIsAuthModalOpen(true);
-    };
-
-    const handleOpenRegister = () => {
-        setIsAuthModalOpen(false);
-        setIsRegisterModalOpen(true);
-    };
-
-    return (
-        <Router>
-            <Routes>
-                {/* Home */}
-                <Route
-                    path="/"
-                    element={
-                        <HomePage
-                            isMenuOpen={isMenuOpen}
-                            setIsMenuOpen={setIsMenuOpen}
-                            onOpenSignIn={handleOpenAuth}
-                            onOpenRegister={handleOpenRegister}
-                        />
-                    }
-                />
-
-                {/* Help Center */}
-                <Route
-                    path="/HelpCenter"
-                    element={
-                        <HelpCenter
-                            isMenuOpen={isMenuOpen}
-                            setIsMenuOpen={setIsMenuOpen}
-                            onOpenSignIn={handleOpenAuth}
-                            onOpenRegister={handleOpenRegister}
-                            onOpenChat={() => setIsChatOpen(true)}
-                        />
-                    }
-                />
-
-                {/* Host Dashboard */}
-                <Route
-                    path="/host/Listings"
-                    element={<DashboardListings />}
-                />
-
-                <Route
-                    path="/host/Reservations"
-                    element={<DashboardReservations />}
-                />
-
-                {/* FAQ Management */}
-                <Route
-                    path="/host/FaqManagement"
-                    element={<FaqManagement />}
-                />
-            </Routes>
-
-            {/* Global Modals */}
-            <AuthModal
-                isOpen={isAuthModalOpen}
-                onClose={() => setIsAuthModalOpen(false)}
-                onSwitchToRegister={handleOpenRegister}
-            />
-
-            <RegisterModal
-                isOpen={isRegisterModalOpen}
-                onClose={() => setIsRegisterModalOpen(false)}
-            />
-
-            {!isChatOpen && (
-                <button
-                    onClick={() => setIsChatOpen(true)}
-                    className="fixed bottom-6 right-6 z-40 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg hover:bg-gray-700"
-                >
-                    💬 Chat
-                </button>
-            )}
-
-            {/* 💬 Global Floating Chatbot Bubble */}
-            <Chatbot
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                onToggle={() => setIsChatOpen(!isChatOpen)}
-            />
-        </Router>
-    );
-}
-=======
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { API_BASE_URL } from './lib/api';
 
 import AuthModal from './components/AuthModal';
 import RegisterModal from './components/RegisterModal';
+import Chatbot from './components/Chatbot';
+import ProtectedRoute from './components/ProtectedRoute';
+
 import HelpCenter from './pages/faq_page/HelpCenter';
 import FaqManagement from './pages/faq_page/FaqManagement';
 import Profile from './pages/Profile';
 import Trips from './pages/Trips';
 
 import ListedProperty from './pages/ListedProperty';
-import ProtectedRoute from './components/ProtectedRoute';
 
-// dashboard pages
+// Home page
+import HomePage from './pages/home_page/HomePage';
+
+// Dashboard pages
 import DashboardListings from './pages/dashboard_page/DashboardListings';
 import DashboardReservations from './pages/dashboard_page/DashboardReservations';
 import DashboardCalendar from './pages/dashboard_page/DashboardCalendar';
 import UserManagement from './pages/dashboard_page/UserManagement';
 
-// home page
-import HomePage from './pages/home_page/HomePage';
-
-// booking confirmation
+// Booking pages
 import BookingConfirmation from './pages/booking_page/Bookingconfirmation';
 import BookingConfirmation2 from './pages/booking_page/Bookingconfirmation_2';
 
-import Chatbot from './components/Chatbot';
-
-// listing pages
+// Listing pages
 import PlaceOffer from './pages/listing_page/PlaceOffer';
 import UnitListing from './pages/listing_page/UnitListing';
 import PropertyDescription from './pages/listing_page/PropertyDescription';
@@ -178,238 +40,297 @@ import ListingPublish from './pages/listing_page/ListingPublish';
 import PlaceImages from './pages/listing_page/PlaceImages';
 
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+    const [user, setUser] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
-  const handleOpenAuth = () => {
-    setIsRegisterModalOpen(false);
-    setIsAuthModalOpen(true);
-  };
-
-  const handleOpenRegister = () => {
-    setIsAuthModalOpen(false);
-    setIsRegisterModalOpen(true);
-  };
-
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/check_auth.php`, { credentials: 'include' })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.authenticated) {
-          setUser(data.user);
-        } else {
-          setUser(null);
-        }
-      })
-      .catch(() => setUser(null))
-      .finally(() => setIsLoading(false));
-
-    const handleAuthChange = (event) => {
-      if (event.detail?.loggedIn && event.detail?.user) {
-        setUser(event.detail.user);
-      } else {
-        setUser(null);
-      }
+    const handleOpenAuth = () => {
+        setIsRegisterModalOpen(false);
+        setIsAuthModalOpen(true);
     };
 
-    window.addEventListener('auth-changed', handleAuthChange);
-    return () => window.removeEventListener('auth-changed', handleAuthChange);
-  }, []);
+    const handleOpenRegister = () => {
+        setIsAuthModalOpen(false);
+        setIsRegisterModalOpen(true);
+    };
 
-  return (
-    <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <HomePage
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              user={user}
-              onLogout={() => setUser(null)}
-              onOpenSignIn={handleOpenAuth}
-              onOpenRegister={handleOpenRegister}
-            />
-          }
-        />
+    useEffect(() => {
+        fetch(`${API_BASE_URL}/check_auth.php`, {
+            credentials: 'include',
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.authenticated) {
+                    setUser(data.user);
+                } else {
+                    setUser(null);
+                }
+            })
+            .catch(() => setUser(null))
+            .finally(() => setIsLoading(false));
 
-        <Route
-          path="/property/:unitId"
-          element={
-            <ListedProperty
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              user={user}
-              onLogout={() => setUser(null)}
-              onOpenSignIn={handleOpenAuth}
-              onOpenRegister={handleOpenRegister}
-            />
-          }
-        />
-
-        <Route
-          path="/host/FaqManagement"
-          element={<FaqManagement />}
-        />
-
-        <Route element={<ProtectedRoute user={user} isLoading={isLoading} />}>
-          <Route path="/profile" element={<Profile user={user} />} />
-        </Route>
-      
-    
-        <Route element={<ProtectedRoute user={user} isLoading={isLoading} allowedRoles={['admin', 'assistant']} />}>
-          <Route path="/host/listings" element={<DashboardListings />} />
-          <Route path="/host/reservations" element={<DashboardReservations />} /> 
-          <Route path="/host/calendar" element={<DashboardCalendar />} />
-          <Route path="/host/listing" element={<UnitListing />} />
-          <Route path="/host/listing/PropertyDescription" element={<PropertyDescription />} />
-          <Route path="/host/listing/PlaceDescription" element={<PlaceDescription />} />
-          <Route path="/host/listing/PlaceOffer" element={<PlaceOffer />} />
-          <Route path="/host/listing/PlaceLocation" element={<PlaceLocation />} />
-          <Route path="/host/listing/PlaceRate" element={<PlaceRate />} />
-          <Route path="/host/listing/PlaceDiscount" element={<PlaceDiscount />} />
-          <Route path="/host/listing/PlaceDetail" element={<PlaceDetail />} />
-          <Route path="/host/listing/ListingPublish" element={<ListingPublish />} />
-          <Route path="/host/listing/PlaceImages" element={<PlaceImages />} />
-        </Route>
-        
-
-        <Route
-          element={
-            <ProtectedRoute
-              user={user}
-              isLoading={isLoading}
-              allowedRoles={['admin', 'assistant']}
-            />
-          }
-        >
-          <Route path="/host/listings" element={<DashboardListings />} />
-          <Route path="/host/reservations" element={<DashboardReservations />} />
-          <Route path="/host/calendar" element={<DashboardCalendar />} />
-          <Route path="/host/faqs" element={<FaqManagement />} />
-          <Route path="/host/listing" element={<UnitListing />} />
-          <Route
-            path="/host/listing/PropertyDescription"
-            element={<PropertyDescription />}
-          />
-          <Route
-            path="/host/listing/PlaceDescription"
-            element={<PlaceDescription />}
-          />
-          <Route
-            path="/host/listing/PlaceOffer"
-            element={<PlaceOffer />}
-          />
-          <Route
-            path="/host/listing/PlaceLocation"
-            element={<PlaceLocation />}
-          />
-          <Route
-            path="/host/listing/PlaceRate"
-            element={<PlaceRate />}
-          />
-          <Route
-            path="/host/listing/PlaceDiscount"
-            element={<PlaceDiscount />}
-          />
-          <Route
-            path="/host/listing/PlaceDetail"
-            element={<PlaceDetail />}
-          />
-          <Route
-            path="/host/listing/ListingPublish"
-            element={<ListingPublish />}   
-          />
-        </Route>
-
-        <Route
-          element={
-            <ProtectedRoute
-              user={user}
-              isLoading={isLoading}
-              allowedRoles={['admin']}
-            />
-          }
-        >
-          <Route path="/host/users" element={<UserManagement />} />
-        </Route>
-        <Route
-          path="/help"
-          element={
-            <HelpCenter
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              user={user}
-              onLogout={() => setUser(null)}
-              onOpenSignIn={handleOpenAuth}
-              onOpenRegister={handleOpenRegister}
-              onOpenChat={() => setIsChatOpen(true)}
-            />
-          }
-        />
-
-        <Route
-          element={
-            <ProtectedRoute
-              user={user}
-              isLoading={isLoading}
-              allowedRoles={['customer', 'admin', 'assistant']}
-            />
-          }
-        >
-          <Route path="/trips" element={<Trips />} />
-
-          <Route
-            path="/booking-confirmation"
-            element={
-              <BookingConfirmation
-                user={user}
-                onLogout={() => setUser(null)}
-                isMenuOpen={isMenuOpen}
-                setIsMenuOpen={setIsMenuOpen}
-                onOpenSignIn={handleOpenAuth}
-                onOpenRegister={handleOpenRegister}
-              />
+        const handleAuthChange = (event) => {
+            if (event.detail?.loggedIn && event.detail?.user) {
+                setUser(event.detail.user);
+            } else {
+                setUser(null);
             }
-          />
+        };
 
-          <Route
-            path="/booking-confirmation-2"
-            element={
-              <BookingConfirmation2
-                user={user}
-                onLogout={() => setUser(null)}
-                isMenuOpen={isMenuOpen}
-                setIsMenuOpen={setIsMenuOpen}
-                onOpenSignIn={handleOpenAuth}
-                onOpenRegister={handleOpenRegister}
-              />
-            }
-          />
-        </Route>
-      </Routes>
+        window.addEventListener('auth-changed', handleAuthChange);
 
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onLoginSuccess={(userData) => setUser(userData)}
-      />
+        return () => {
+            window.removeEventListener('auth-changed', handleAuthChange);
+        };
+    }, []);
 
-      <RegisterModal
-        isOpen={isRegisterModalOpen}
-        onClose={() => setIsRegisterModalOpen(false)}
-      />
+    return (
+        <Router>
+            <Routes>
+                {/* Home */}
+                <Route
+                    path="/"
+                    element={
+                        <HomePage
+                            isMenuOpen={isMenuOpen}
+                            setIsMenuOpen={setIsMenuOpen}
+                            user={user}
+                            onLogout={() => setUser(null)}
+                            onOpenSignIn={handleOpenAuth}
+                            onOpenRegister={handleOpenRegister}
+                        />
+                    }
+                />
 
-      <Chatbot
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        onToggle={() => setIsChatOpen(!isChatOpen)}
-      />
-    </Router>
-  );
+                {/* Property */}
+                <Route
+                    path="/property/:unitId"
+                    element={
+                        <ListedProperty
+                            isMenuOpen={isMenuOpen}
+                            setIsMenuOpen={setIsMenuOpen}
+                            user={user}
+                            onLogout={() => setUser(null)}
+                            onOpenSignIn={handleOpenAuth}
+                            onOpenRegister={handleOpenRegister}
+                        />
+                    }
+                />
+
+                {/* Help Center */}
+                <Route
+                    path="/help"
+                    element={
+                        <HelpCenter
+                            isMenuOpen={isMenuOpen}
+                            setIsMenuOpen={setIsMenuOpen}
+                            user={user}
+                            onLogout={() => setUser(null)}
+                            onOpenSignIn={handleOpenAuth}
+                            onOpenRegister={handleOpenRegister}
+                            onOpenChat={() => setIsChatOpen(true)}
+                        />
+                    }
+                />
+
+                {/* Profile */}
+                <Route
+                    element={
+                        <ProtectedRoute
+                            user={user}
+                            isLoading={isLoading}
+                        />
+                    }
+                >
+                    <Route
+                        path="/profile"
+                        element={<Profile user={user} />}
+                    />
+                </Route>
+
+                {/* Host Dashboard */}
+                <Route
+                    element={
+                        <ProtectedRoute
+                            user={user}
+                            isLoading={isLoading}
+                            allowedRoles={['admin', 'assistant']}
+                        />
+                    }
+                >
+                    <Route
+                        path="/host/listings"
+                        element={<DashboardListings />}
+                    />
+
+                    <Route
+                        path="/host/reservations"
+                        element={<DashboardReservations />}
+                    />
+
+                    <Route
+                        path="/host/calendar"
+                        element={<DashboardCalendar />}
+                    />
+
+                    <Route
+                        path="/host/faqs"
+                        element={<FaqManagement />}
+                    />
+
+                    <Route
+                        path="/host/listing"
+                        element={<UnitListing />}
+                    />
+
+                    <Route
+                        path="/host/listing/PropertyDescription"
+                        element={<PropertyDescription />}
+                    />
+
+                    <Route
+                        path="/host/listing/PlaceDescription"
+                        element={<PlaceDescription />}
+                    />
+
+                    <Route
+                        path="/host/listing/PlaceOffer"
+                        element={<PlaceOffer />}
+                    />
+
+                    <Route
+                        path="/host/listing/PlaceLocation"
+                        element={<PlaceLocation />}
+                    />
+
+                    <Route
+                        path="/host/listing/PlaceRate"
+                        element={<PlaceRate />}
+                    />
+
+                    <Route
+                        path="/host/listing/PlaceDiscount"
+                        element={<PlaceDiscount />}
+                    />
+
+                    <Route
+                        path="/host/listing/PlaceDetail"
+                        element={<PlaceDetail />}
+                    />
+
+                    <Route
+                        path="/host/listing/ListingPublish"
+                        element={<ListingPublish />}
+                    />
+
+                    <Route
+                        path="/host/listing/PlaceImages"
+                        element={<PlaceImages />}
+                    />
+                </Route>
+
+                {/* FAQ Management compatibility route */}
+                <Route
+                    path="/host/FaqManagement"
+                    element={<FaqManagement />}
+                />
+
+                {/* User Management */}
+                <Route
+                    element={
+                        <ProtectedRoute
+                            user={user}
+                            isLoading={isLoading}
+                            allowedRoles={['admin']}
+                        />
+                    }
+                >
+                    <Route
+                        path="/host/users"
+                        element={<UserManagement />}
+                    />
+                </Route>
+
+                {/* Customer Routes */}
+                <Route
+                    element={
+                        <ProtectedRoute
+                            user={user}
+                            isLoading={isLoading}
+                            allowedRoles={[
+                                'customer',
+                                'admin',
+                                'assistant',
+                            ]}
+                        />
+                    }
+                >
+                    <Route
+                        path="/trips"
+                        element={<Trips />}
+                    />
+
+                    <Route
+                        path="/booking-confirmation"
+                        element={
+                            <BookingConfirmation
+                                user={user}
+                                onLogout={() => setUser(null)}
+                                isMenuOpen={isMenuOpen}
+                                setIsMenuOpen={setIsMenuOpen}
+                                onOpenSignIn={handleOpenAuth}
+                                onOpenRegister={handleOpenRegister}
+                            />
+                        }
+                    />
+
+                    <Route
+                        path="/booking-confirmation-2"
+                        element={
+                            <BookingConfirmation2
+                                user={user}
+                                onLogout={() => setUser(null)}
+                                isMenuOpen={isMenuOpen}
+                                setIsMenuOpen={setIsMenuOpen}
+                                onOpenSignIn={handleOpenAuth}
+                                onOpenRegister={handleOpenRegister}
+                            />
+                        }
+                    />
+                </Route>
+            </Routes>
+
+            {/* Global Authentication Modals */}
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                onLoginSuccess={(userData) => setUser(userData)}
+            />
+
+            <RegisterModal
+                isOpen={isRegisterModalOpen}
+                onClose={() => setIsRegisterModalOpen(false)}
+            />
+
+            {/* Floating Chat Button */}
+            {!isChatOpen && (
+                <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="fixed bottom-6 right-6 z-40 bg-gray-800 text-white px-5 py-3 rounded-full shadow-lg hover:bg-gray-700"
+                >
+                    💬 Chat
+                </button>
+            )}
+
+            {/* Global Chatbot */}
+            <Chatbot
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+                onToggle={() => setIsChatOpen(!isChatOpen)}
+            />
+        </Router>
+    );
 }
->>>>>>> 18c0f833110ee1309d089fc256517706a70714a6

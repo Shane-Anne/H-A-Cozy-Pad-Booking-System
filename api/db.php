@@ -1,49 +1,44 @@
 <?php
-    require 'config.php';
-<<<<<<< HEAD
-    
-    header("Access-Control-Allow-Origin: $FRONTEND_ORIGIN");
-    header('Access-Control-Allow-Credentials: true');
-    header('Access-Control-Allow-Headers: Content-Type');
-    header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-    header('Content-Type: application/json');
-    
-    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-=======
+require 'config.php';
 
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    
-    $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
-    $isLocalFrontend = preg_match(
-        '/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/',
-        $requestOrigin
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+$isLocalFrontend = preg_match(
+    '/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/',
+    $requestOrigin
+);
+
+header(
+    'Access-Control-Allow-Origin: ' .
+    ($isLocalFrontend ? $requestOrigin : $FRONTEND_ORIGIN)
+);
+header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS');
+header('Vary: Origin');
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+try {
+    $pdo = new PDO(
+        "mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4",
+        $DB_USER,
+        $DB_PASS,
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
-
-    header('Access-Control-Allow-Origin: ' . ($isLocalFrontend ? $requestOrigin : $FRONTEND_ORIGIN));
-    header('Access-Control-Allow-Credentials: true');
-    header('Access-Control-Allow-Headers: Content-Type');
-    header('Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS');
-    header('Vary: Origin');
-    header('Content-Type: application/json');
-    
-    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-        http_response_code(200);
->>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
-        exit;
-    }
-    
-    try {
-        $pdo = new PDO(
-            "mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4",
-            $DB_USER,
-            $DB_PASS,
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-        );
-    } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
-        exit;
-    }
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Database connection failed: ' . $e->getMessage()
+    ]);
+    exit;
+}
 ?>

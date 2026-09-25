@@ -1,55 +1,50 @@
 <?php
-    require 'db.php';
-<<<<<<< HEAD
-    session_start();
-=======
->>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
+require 'db.php';
 
-    $data = json_decode(file_get_contents('php://input'), true);
+session_start();
 
-    $email    = trim($data['identifier'] ?? ''); // schema only supports email login for now
-    $password = $data['password'] ?? '';
+$data = json_decode(file_get_contents('php://input'), true);
 
-    if (!$email || !$password) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Email and password are required']);
-        exit;
-    }
+$email = trim($data['identifier'] ?? '');
+$password = $data['password'] ?? '';
 
-<<<<<<< HEAD
-    $stmt = $pdo->prepare('SELECT user_id, full_name, email, password, role FROM users WHERE email = ?');
-=======
-    $stmt = $pdo->prepare('SELECT user_id, full_name, email, password, contact_num, role FROM users WHERE email = ?');
->>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
-    $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$email || !$password) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Email and password are required']);
+    exit;
+}
 
-    if (!$user || !password_verify($password, $user['password'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Invalid email or password']);
-        exit;
-    }
+$stmt = $pdo->prepare(
+    'SELECT user_id, full_name, email, password, contact_num, role
+     FROM users
+     WHERE email = ?'
+);
 
-    $_SESSION['user_id'] = $user['user_id'];
-    $_SESSION['email'] = $user['email'];
-    $_SESSION['role'] = $user['role'];
-<<<<<<< HEAD
-=======
-    $_SESSION['needs_setup'] = trim((string) ($user['contact_num'] ?? '')) === '';
->>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
+$stmt->execute([$email]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    echo json_encode([
-        'success' => true,
-        'user' => [
-            'id' => $user['user_id'],
-            'fullName' => $user['full_name'],
-            'email' => $user['email'],
-            'role' => $user['role'],
-<<<<<<< HEAD
-=======
-            'contactNum' => $user['contact_num'],
-            'needsSetup' => $_SESSION['needs_setup'],
->>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
-        ],
-    ]);
+if (!$user || !password_verify($password, $user['password'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Invalid email or password']);
+    exit;
+}
+
+$_SESSION['user_id'] = $user['user_id'];
+$_SESSION['email'] = $user['email'];
+$_SESSION['role'] = $user['role'];
+
+$_SESSION['needs_setup'] =
+    trim((string) ($user['contact_num'] ?? '')) === '';
+
+echo json_encode([
+    'success' => true,
+    'user' => [
+        'id' => $user['user_id'],
+        'fullName' => $user['full_name'],
+        'email' => $user['email'],
+        'role' => $user['role'],
+        'contactNum' => $user['contact_num'],
+        'needsSetup' => $_SESSION['needs_setup'],
+    ],
+]);
 ?>

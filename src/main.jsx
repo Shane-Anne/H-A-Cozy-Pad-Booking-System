@@ -1,15 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
-<<<<<<< HEAD
-import './css/home.css'
 
-createRoot(document.getElementById('root')).render(
-    <StrictMode>
-        <App />
-    </StrictMode>
-)
-=======
 import './style/home.css'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
@@ -22,4 +14,3 @@ createRoot(document.getElementById('root')).render(
     </GoogleOAuthProvider>
   </StrictMode>,
 )
->>>>>>> 18c0f833110ee1309d089fc256517706a70714a6
