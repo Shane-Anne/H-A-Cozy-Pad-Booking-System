@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ListingHeader from '../../components/ListingHeader';
 import { useNavigate } from 'react-router-dom';
 import { getListingDraft, updateListingDraft } from '../../lib/listingDraft';
@@ -159,7 +159,9 @@ export default function RoomsRates() {
   const navigate = useNavigate();
   const draft = getListingDraft();
 
-  const [bedrooms, setBedrooms] = useState([makeBedroom()]);
+  const [bedrooms, setBedrooms] = useState(
+    draft.bedrooms?.length ? draft.bedrooms : [makeBedroom()]
+  );
 
   const [bathrooms, setBathrooms] = useState(
     draft.bathrooms || 0
@@ -183,6 +185,17 @@ export default function RoomsRates() {
   const [availableUntil, setAvailableUntil] = useState(
     draft.availableUntil || ''
   );
+
+  useEffect(() => {
+    updateListingDraft({
+      bedrooms,
+      bathrooms,
+      maxGuests,
+      ratePerNight: nightlyRate,
+      availableFrom,
+      availableUntil,
+    });
+  }, [bedrooms, bathrooms, maxGuests, nightlyRate, availableFrom, availableUntil]);
 
   const addBedroom = () => {
     setBedrooms((prev) => [

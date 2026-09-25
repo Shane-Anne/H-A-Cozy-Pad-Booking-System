@@ -130,7 +130,7 @@ export default function ListingPublish() {
       draft.zip,
     ]
       .filter(Boolean)
-      .join(', ');
+      .join(', ') || draft.location || '';
 
     try {
       const formData = new FormData();
@@ -154,6 +154,19 @@ export default function ListingPublish() {
         'location',
         fullLocation
       );
+
+      formData.append('locationSearch', draft.search || '');
+      formData.append('country', draft.country || '');
+      formData.append('state', draft.state || '');
+      formData.append('city', draft.city || '');
+      formData.append('street', draft.street || '');
+      formData.append('unitLocation', draft.unit || '');
+      formData.append('zip', draft.zip || '');
+      formData.append('propertySize', draft.propertySize || '');
+      formData.append('bathrooms', draft.bathrooms || '0');
+      formData.append('bedroomDetails', JSON.stringify(draft.bedrooms || []));
+      formData.append('basePrice', draft.basePrice || '');
+      formData.append('discounts', JSON.stringify(draft.discounts || []));
 
       if (
         draft.latitude !== null &&

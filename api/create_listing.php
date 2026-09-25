@@ -19,6 +19,14 @@ $location = trim(
     $data['location'] ?? ''
 );
 
+$locationSearch = trim($data['locationSearch'] ?? '');
+$country = trim($data['country'] ?? '');
+$state = trim($data['state'] ?? '');
+$city = trim($data['city'] ?? '');
+$street = trim($data['street'] ?? '');
+$unitLocation = trim($data['unitLocation'] ?? '');
+$zip = trim($data['zip'] ?? '');
+
 $latitude = $data['latitude'] ?? null;
 $longitude = $data['longitude'] ?? null;
 
@@ -29,6 +37,22 @@ $unitName = trim(
 $description = trim(
     $data['description'] ?? ''
 );
+
+$propertySize = trim($data['propertySize'] ?? '');
+$bathrooms = max(0, (int) ($data['bathrooms'] ?? 0));
+$bedroomDetails = json_decode($data['bedroomDetails'] ?? '[]', true);
+$basePrice = ($data['basePrice'] ?? '') !== ''
+    ? (float) $data['basePrice']
+    : null;
+$discounts = json_decode($data['discounts'] ?? '[]', true);
+
+if (!is_array($bedroomDetails)) {
+    $bedroomDetails = [];
+}
+
+if (!is_array($discounts)) {
+    $discounts = [];
+}
 
 $maxGuests = (int) (
     $data['maxGuests'] ?? 0
@@ -239,16 +263,30 @@ try {
             building_name,
             property_category,
             location,
+            location_search,
+            country,
+            state,
+            city,
+            street,
+            unit_location,
+            zip,
             latitude,
             longitude
         )
-        VALUES (?, ?, ?, ?, ?)'
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
 
     $building->execute([
         $buildingName,
         $propertyCategory,
         $location,
+        $locationSearch,
+        $country,
+        $state,
+        $city,
+        $street,
+        $unitLocation,
+        $zip,
         $latitude,
         $longitude,
     ]);
@@ -261,20 +299,30 @@ try {
             building_id,
             unit_name,
             description,
+            property_size,
             max_guests,
+            bathrooms,
+            bedroom_details,
             rate_per_night,
+            base_price,
+            discounts,
             available_from,
             available_until
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)'
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
 
     $unit->execute([
         $buildingId,
         $unitName,
         $description,
+        $propertySize ?: null,
         $maxGuests,
+        $bathrooms,
+        json_encode($bedroomDetails),
         $ratePerNight,
+        $basePrice,
+        json_encode($discounts),
         $availableFrom,
         $availableUntil,
     ]);

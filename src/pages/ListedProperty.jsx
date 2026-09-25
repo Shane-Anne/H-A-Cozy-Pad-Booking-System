@@ -72,6 +72,14 @@ function formatAvailabilityDate(dateString) {
   return `${month}/${day}/${year}`;
 }
 
+function formatPropertyCategory(category) {
+  return {
+    home: 'Home-type property',
+    hotel: 'Hotel-type property',
+    unique: 'Unique-type property',
+  }[category] || category || 'Property';
+}
+
 const PLACEHOLDER_REVIEWS = Array.from(
   { length: 6 },
   (_, i) => ({
@@ -509,7 +517,7 @@ export default function PropertyDetail({
               </div>
 
               {/* Map */}
-              <div className="h-56 lg:h-full min-h-[220px] overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
+              <div className="relative z-0 h-56 lg:h-full min-h-[220px] overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
 
                 {Number.isFinite(
                   Number(unit.latitude)
@@ -560,13 +568,80 @@ export default function PropertyDetail({
               <div>
 
                 <h2 className="text-lg font-semibold mb-2">
-                  {unit.max_guests ?? '—'} guests
+                  Description
                 </h2>
 
                 <p className="text-neutral-700 leading-relaxed">
                   {unit.description ||
                     'No description provided for this unit yet.'}
                 </p>
+
+                <section className="mt-7 border-y border-neutral-200 py-6">
+                  <h2 className="text-xl font-bold mb-4">Property details</h2>
+
+                  <div className="grid grid-cols-2 gap-x-5 gap-y-4 text-sm sm:grid-cols-3">
+                    <div>
+                      <p className="text-neutral-500">Property type</p>
+                      <p className="mt-1 font-medium">{unit.unit_name || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Category</p>
+                      <p className="mt-1 font-medium">{formatPropertyCategory(unit.property_category)}</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Property size</p>
+                      <p className="mt-1 font-medium">{unit.property_size || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Bathrooms</p>
+                      <p className="mt-1 font-medium">{unit.bathrooms ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Maximum guests</p>
+                      <p className="mt-1 font-medium">{unit.max_guests ?? '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">Base price</p>
+                      <p className="mt-1 font-medium">{unit.base_price ? `₱${Number(unit.base_price).toFixed(2)}` : 'Not specified'}</p>
+                    </div>
+                  </div>
+
+                  {Array.isArray(unit.bedroom_details) && unit.bedroom_details.length > 0 && (
+                    <div className="mt-5">
+                      <p className="text-sm text-neutral-500">Bedrooms and beds</p>
+                      <div className="mt-2 space-y-2 text-sm">
+                        {unit.bedroom_details.map((bedroom, index) => (
+                          <p key={bedroom.id || index}>
+                            <span className="font-medium">Bedroom {index + 1}:</span>{' '}
+                            {(bedroom.beds || []).map((bed, bedIndex) => `${bed.numBeds || 1} ${bed.bedType || 'bed'}${bedIndex < bedroom.beds.length - 1 ? ', ' : ''}`)}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(unit.street || unit.city || unit.state || unit.country || unit.zip || unit.unit_location) && (
+                    <div className="mt-5">
+                      <p className="text-sm text-neutral-500">Address details</p>
+                      <p className="mt-1 text-sm">
+                        {[unit.street, unit.unit_location, unit.city, unit.state, unit.country, unit.zip].filter(Boolean).join(', ')}
+                      </p>
+                    </div>
+                  )}
+
+                  {Array.isArray(unit.discounts) && unit.discounts.some((discount) => discount.checked) && (
+                    <div className="mt-5">
+                      <p className="text-sm text-neutral-500">Special offers</p>
+                      <div className="mt-2 space-y-1 text-sm">
+                        {unit.discounts.filter((discount) => discount.checked).map((discount) => (
+                          <p key={discount.id || discount.title} className="font-medium">
+                            {discount.percent} off: {discount.title}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
 
               </div>
 
