@@ -48,7 +48,7 @@ export default function PropertySection({ title, properties = [] }) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-7">
           {properties.map((property) => {
             // First uploaded image = homepage thumbnail
             const thumbnail =
