@@ -1,4 +1,5 @@
 <?php
+
 require 'db.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -6,6 +7,15 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: http://localhost:5173');
+header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
@@ -15,16 +25,14 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$bookingId = (int) ($_POST['bookingId'] ?? 0);
+$requestType = strtolower(trim($_POST['requestType'] ?? ''));
+$requestReason = trim($_POST['requestReason'] ?? '');
 
-$bookingId = (int) ($data['bookingId'] ?? 0);
-$requestType = strtolower(trim($data['requestType'] ?? ''));
-$requestReason = trim($data['requestReason'] ?? '');
-
-$requestedCheckIn = trim($data['requestedCheckIn'] ?? '');
-$requestedCheckOut = trim($data['requestedCheckOut'] ?? '');
-$requestedGuests = (int) ($data['requestedGuests'] ?? 0);
-$requestedSpecialRequests = trim($data['requestedSpecialRequests'] ?? '');
+$requestedCheckIn = trim($_POST['requestedCheckIn'] ?? '');
+$requestedCheckOut = trim($_POST['requestedCheckOut'] ?? '');
+$requestedGuests = (int) ($_POST['requestedGuests'] ?? 0);
+$requestedSpecialRequests = trim($_POST['requestedSpecialRequests'] ?? '');
 
 if ($bookingId <= 0) {
     http_response_code(400);
@@ -95,10 +103,18 @@ try {
     }
 
     $booking = $pdo->prepare(
-        'SELECT booking_id
-         FROM bookings
-         WHERE booking_id = ?
-         AND customer_id = ?'
+        'SELECT
+            b.booking_id,
+            b.unit_id,
+            b.check_in_date,
+            b.check_out_date,
+            b.num_of_guests,
+            u.rate_per_night,
+            u.max_guests
+         FROM bookings b
+         INNER JOIN units u ON u.unit_id = b.unit_id
+         WHERE b.booking_id = ?
+         AND b.customer_id = ?'
     );
 
     $booking->execute([
@@ -106,10 +122,23 @@ try {
         $customerId
     ]);
 
-    if (!$booking->fetch()) {
+    $bookingData = $booking->fetch(PDO::FETCH_ASSOC);
+
+    if (!$bookingData) {
         http_response_code(404);
         echo json_encode([
             'error' => 'Booking not found'
+        ]);
+        exit;
+    }
+
+    if (
+        $requestType === 'modification' &&
+        $requestedGuests > (int) $bookingData['max_guests']
+    ) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'The requested number of guests exceeds the unit capacity'
         ]);
         exit;
     }
@@ -133,6 +162,126 @@ try {
     }
 
     if ($requestType === 'modification') {
+        $overlap = $pdo->prepare(
+            'SELECT booking_id
+             FROM bookings
+             WHERE unit_id = ?
+             AND booking_id != ?
+             AND status IN (
+                 \'awaiting_payment\',
+                 \'payment_review\',
+                 \'confirmed\',
+                 \'checked_in\'
+             )
+             AND check_in_date < ?
+             AND check_out_date > ?
+             LIMIT 1'
+        );
+
+        $overlap->execute([
+            $bookingData['unit_id'],
+            $bookingId,
+            $requestedCheckOut,
+            $requestedCheckIn
+        ]);
+
+        if ($overlap->fetch()) {
+            http_response_code(409);
+            echo json_encode([
+                'error' => 'The requested dates are no longer available'
+            ]);
+            exit;
+        }
+
+        $ratePerNight = (float) $bookingData['rate_per_night'];
+
+        $oldNights = (int) $pdo->query(
+            'SELECT DATEDIFF(
+                \'' . $bookingData['check_out_date'] . '\',
+                \'' . $bookingData['check_in_date'] . '\'
+            )'
+        )->fetchColumn();
+
+        $newNights = (int) $pdo->query(
+            'SELECT DATEDIFF(
+                \'' . $requestedCheckOut . '\',
+                \'' . $requestedCheckIn . '\'
+            )'
+        )->fetchColumn();
+
+        $oldTotal = $oldNights * $ratePerNight;
+        $newTotal = $newNights * $ratePerNight;
+        $difference = $newTotal - $oldTotal;
+
+        $paymentAmount = null;
+        $refundAmount = null;
+        $paymentStatus = 'not_required';
+        $proofPath = null;
+
+        if ($difference > 0) {
+            $paymentAmount = $difference;
+            $paymentStatus = 'pending';
+
+            if (
+                !isset($_FILES['proofOfPayment']) ||
+                $_FILES['proofOfPayment']['error'] !== UPLOAD_ERR_OK
+            ) {
+                http_response_code(400);
+                echo json_encode([
+                    'error' => 'Proof of payment is required for an additional payment'
+                ]);
+                exit;
+            }
+
+            $file = $_FILES['proofOfPayment'];
+
+            if ($file['size'] > 10 * 1024 * 1024) {
+                http_response_code(400);
+                echo json_encode([
+                    'error' => 'Proof of payment must not exceed 10MB'
+                ]);
+                exit;
+            }
+
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($file['tmp_name']);
+
+            $allowedTypes = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp'
+            ];
+
+            if (!isset($allowedTypes[$mimeType])) {
+                http_response_code(400);
+                echo json_encode([
+                    'error' => 'Proof of payment must be a JPG, PNG, or WEBP image'
+                ]);
+                exit;
+            }
+
+            $uploadDirectory = __DIR__ . '/uploads/payment_proofs/';
+
+            if (!is_dir($uploadDirectory)) {
+                if (!mkdir($uploadDirectory, 0755, true)) {
+                    throw new Exception('Unable to create payment proof directory');
+                }
+            }
+
+            $fileName = 'proof_' . $bookingId . '_' . bin2hex(random_bytes(8)) . '.' . $allowedTypes[$mimeType];
+
+            $filePath = $uploadDirectory . $fileName;
+
+            if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                throw new Exception('Unable to save proof of payment');
+            }
+
+            $proofPath = 'uploads/payment_proofs/' . $fileName;
+        } elseif ($difference < 0) {
+            $refundAmount = abs($difference);
+            $paymentStatus = 'not_required';
+        }
+
         $request = $pdo->prepare(
             'INSERT INTO booking_requests
                 (
@@ -143,9 +292,13 @@ try {
                     requested_check_in,
                     requested_check_out,
                     requested_guests,
-                    requested_special_requests
+                    requested_special_requests,
+                    payment_amount,
+                    refund_amount,
+                    proof_of_payment,
+                    payment_status
                 )
-             VALUES (?, ?, ?, \'pending\', ?, ?, ?, ?)'
+             VALUES (?, ?, ?, \'pending\', ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
         $request->execute([
@@ -155,26 +308,50 @@ try {
             $requestedCheckIn,
             $requestedCheckOut,
             $requestedGuests,
-            $requestedSpecialRequests
+            $requestedSpecialRequests,
+            $paymentAmount,
+            $refundAmount,
+            $proofPath,
+            $paymentStatus
         ]);
-    } else {
-        $request = $pdo->prepare(
-            'INSERT INTO booking_requests
-                (
-                    booking_id,
-                    request_type,
-                    request_reason,
-                    request_status
-                )
-             VALUES (?, ?, ?, \'pending\')'
-        );
 
-        $request->execute([
-            $bookingId,
-            $requestType,
-            $requestReason
+        $requestId = (int) $pdo->lastInsertId();
+
+        echo json_encode([
+            'success' => true,
+            'requestId' => $requestId,
+            'bookingId' => $bookingId,
+            'requestType' => $requestType,
+            'requestStatus' => 'pending',
+            'oldTotal' => $oldTotal,
+            'newTotal' => $newTotal,
+            'difference' => $difference,
+            'paymentAmount' => $paymentAmount,
+            'refundAmount' => $refundAmount,
+            'paymentStatus' => $paymentStatus,
+            'proofOfPayment' => $proofPath
         ]);
+
+        exit;
     }
+
+    $request = $pdo->prepare(
+        'INSERT INTO booking_requests
+            (
+                booking_id,
+                request_type,
+                request_reason,
+                request_status,
+                payment_status
+            )
+         VALUES (?, ?, ?, \'pending\', \'not_required\')'
+    );
+
+    $request->execute([
+        $bookingId,
+        $requestType,
+        $requestReason
+    ]);
 
     echo json_encode([
         'success' => true,
@@ -188,6 +365,7 @@ try {
     http_response_code(500);
 
     echo json_encode([
-        'error' => 'Unable to submit booking request'
+        'error' => 'Unable to submit booking request',
+        'details' => $error->getMessage()
     ]);
 }

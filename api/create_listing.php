@@ -5,6 +5,7 @@ require 'db.php';
 header('Content-Type: application/json');
 
 $data = $_POST;
+error_log(print_r($_POST, true));
 
 $buildingName = trim(
     $data['buildingName'] ?? ''
