@@ -92,7 +92,7 @@ export default function PropertyDetails() {
           {/* Continue */}
           <button
             type="button"
-            onClick={() => navigate('/host/listing/ListingPublish')}
+            onClick={() => navigate('/host/listing/PlaceImages')}
             className="
               w-[142px] h-[50px]
               rounded-full

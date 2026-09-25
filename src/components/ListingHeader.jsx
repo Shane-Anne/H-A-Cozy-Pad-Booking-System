@@ -1,31 +1,35 @@
-export default function ListingHeader({
-  onOpenQuestions,
-  onSaveAndExit,
-}) {
+import { useNavigate } from 'react-router-dom';
+
+export default function ListingHeader() {
+  const navigate = useNavigate();
+
+  const handleCancelListing = () => {
+    navigate('/host/listings');
+  };
+
+
   return (
     <header className="flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd] border-b border-neutral-200 shadow-sm">
       
-      <a
-        href="#"
-        className="text-3xl lg:text-4xl font-bold text-black no-underline"
+      <button
+        type="button"
+        onClick={() => navigate('/host/listing')}
+        className="text-3xl lg:text-4xl font-bold text-black bg-transparent border-none p-0 cursor-pointer"
       >
         Listing
-      </a>
+      </button>
 
       <div className="flex items-center gap-6">
+        
         <button
-          onClick={onOpenQuestions}
+          type="button"
+          onClick={handleCancelListing}
           className="px-6 py-2.5 text-lg md:text-xl border border-black rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer"
         >
-          Questions?
+          Cancel Listing
         </button>
 
-        <button
-          onClick={onSaveAndExit}
-          className="px-6 py-2.5 text-lg md:text-xl border border-black rounded-md hover:bg-neutral-100 bg-transparent cursor-pointer"
-        >
-          Save & Exit
-        </button>
+
       </div>
 
     </header>
