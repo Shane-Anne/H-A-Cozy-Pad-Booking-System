@@ -72,17 +72,8 @@ export default function HostHeader({
   };
 
   return (
-<<<<<<< HEAD
-    <header className="grid grid-cols-[1fr_auto_1fr] items-center px-5 md:px-10 lg:px-[52px] py-6 bg-[#fdfdfd] border-b border-neutral-200 relative">
-      {/* Logo */}
-      <Link
-        to="/"
-        className="text-2xl lg:text-3xl font-bold text-black no-underline justify-self-start"
-      >
-=======
     <header className="relative z-[2000] grid grid-cols-[1fr_auto_1fr] items-center px-5 md:px-10 lg:px-[52px] py-6 bg-[#fdfdfd] border-b border-neutral-200">
       <Link to="/" className="text-2xl lg:text-3xl font-bold text-black no-underline justify-self-start">
->>>>>>> 2422c1f414c3950ff2675ae57c90f33379d17770
         H&A Cozy Pad
       </Link>
 

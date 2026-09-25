@@ -159,9 +159,6 @@ export default function AdditionalInformation({
 
   const [specialRequest, setSpecialRequest] = useState("");
 
-  /*
-   * FIELD ERRORS
-   */
   const [errors, setErrors] = useState({
     firstName: "",
     lastName: "",
@@ -172,9 +169,6 @@ export default function AdditionalInformation({
     vehicles: "",
   });
 
-  /*
-   * Helper for updating one field error
-   */
   const setFieldError = (field, message) => {
     setErrors((prev) => ({
       ...prev,
@@ -182,9 +176,7 @@ export default function AdditionalInformation({
     }));
   };
 
-  /*
-   * Clear one field error
-   */
+
   const clearFieldError = (field) => {
     setErrors((prev) => ({
       ...prev,
@@ -192,9 +184,7 @@ export default function AdditionalInformation({
     }));
   };
 
-  /*
-   * VALIDATE FIRST NAME
-   */
+
   const handleFirstNameChange = (e) => {
     const value = e.target.value;
 
@@ -207,9 +197,7 @@ export default function AdditionalInformation({
     }
   };
 
-  /*
-   * VALIDATE LAST NAME
-   */
+
   const handleLastNameChange = (e) => {
     const value = e.target.value;
 
@@ -222,9 +210,7 @@ export default function AdditionalInformation({
     }
   };
 
-  /*
-   * VALIDATE EMAIL
-   */
+
   const handleEmailChange = (e) => {
     const value = e.target.value;
 
@@ -249,9 +235,6 @@ export default function AdditionalInformation({
     clearFieldError("email");
   };
 
-  /*
-   * VALIDATE PHONE
-   */
   const handlePhoneChange = (e) => {
     const value = e.target.value;
 
@@ -276,9 +259,7 @@ export default function AdditionalInformation({
     clearFieldError("phone");
   };
 
-  /*
-   * VALIDATE GOVERNMENT ID
-   */
+
   const handleGovIdChange = (file) => {
     clearFieldError("govId");
 
@@ -316,9 +297,7 @@ export default function AdditionalInformation({
     clearFieldError("govId");
   };
 
-  /*
-   * VALIDATE PROOF OF PAYMENT
-   */
+ 
   const handleProofOfPaymentChange = (file) => {
     clearFieldError("proofOfPayment");
 
@@ -356,9 +335,7 @@ export default function AdditionalInformation({
     clearFieldError("proofOfPayment");
   };
 
-  /*
-   * VEHICLE UPDATE
-   */
+
   const updateVehicle = (index, patch) => {
     setVehicles((prev) =>
       prev.map((v, i) =>
@@ -386,9 +363,7 @@ export default function AdditionalInformation({
     clearFieldError("vehicles");
   };
 
-  /*
-   * VALIDATE ENTIRE FORM
-   */
+
   const validateForm = () => {
     const newErrors = {
       firstName: "",
@@ -402,21 +377,20 @@ export default function AdditionalInformation({
 
     let isValid = true;
 
-    // First name
+   
     if (!firstName.trim()) {
       newErrors.firstName =
         "First name is required.";
       isValid = false;
     }
 
-    // Last name
+
     if (!lastName.trim()) {
       newErrors.lastName =
         "Last name is required.";
       isValid = false;
     }
 
-    // Email
     if (!email.trim()) {
       newErrors.email =
         "Email address is required.";
@@ -432,7 +406,6 @@ export default function AdditionalInformation({
       }
     }
 
-    // Phone
     if (!phone.trim()) {
       newErrors.phone =
         "Phone number is required.";
@@ -447,7 +420,6 @@ export default function AdditionalInformation({
       }
     }
 
-    // Government ID
     if (!govId) {
       newErrors.govId =
         "Government-issued ID is required.";
@@ -485,7 +457,7 @@ export default function AdditionalInformation({
       isValid = false;
     }
 
-    // Vehicle
+ 
     if (hasVehicle) {
       if (!vehicles.length) {
         newErrors.vehicles =
@@ -512,9 +484,7 @@ export default function AdditionalInformation({
     return isValid;
   };
 
-  /*
-   * SUBMIT FORM
-   */
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -522,11 +492,10 @@ export default function AdditionalInformation({
 
     setSubmitError("");
 
-    // Validate before sending request
     const isValid = validateForm();
 
     if (!isValid) {
-      // Scroll to the first error
+ 
       setTimeout(() => {
         const firstError = document.querySelector(
           '[data-error="true"]'

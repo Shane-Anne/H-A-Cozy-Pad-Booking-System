@@ -59,22 +59,9 @@ export default function Header({
   };
 
   return (
-<<<<<<< HEAD
-    <header className="relative flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
-      <Link
-        to="/"
-        className="text-3xl lg:text-4xl font-bold text-black no-underline"
-      >
-        <img
-          src={logo}
-          alt="H&A Cozy Pad"
-          className="h-20 w-auto object-contain"
-        />
-=======
     <header className="relative z-[2000] flex items-center justify-between px-5 md:px-10 lg:px-[52px] py-7 bg-[#fdfdfd]">
       <Link to="../" className="text-3xl lg:text-4xl font-bold text-black no-underline">
         <img src={logo} alt="H&A Cozy Pad" className="h-20 w-auto object-contain" />
->>>>>>> 2422c1f414c3950ff2675ae57c90f33379d17770
       </Link>
 
       <nav className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">

@@ -8,8 +8,6 @@ export default function PlaceImages() {
   const [images, setImages] = useState([]);
   const [error, setError] = useState('');
 
-  // Clean up preview URLs when the component unmounts.
-  // The actual File objects are passed through React Router state.
   useEffect(() => {
     return () => {
       images.forEach((image) => {
@@ -47,7 +45,6 @@ export default function PlaceImages() {
       ...newImages,
     ]);
 
-    // Allows selecting the same file again later.
     event.target.value = '';
   };
 

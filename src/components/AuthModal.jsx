@@ -16,7 +16,7 @@ export default function AuthModal({
 
   const navigate = useNavigate();
 
-  // Lock body scroll and register escape key
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -66,13 +66,10 @@ export default function AuthModal({
         return;
       }
 
-      // Tell App.jsx that login was successful.
-      // App.jsx will update the user and redirect to "/".
       if (onLoginSuccess) {
         onLoginSuccess(data.user);
       }
 
-      // Keep the auth state synchronized with the rest of the app.
       window.dispatchEvent(
         new CustomEvent('auth-changed', {
           detail: {
@@ -82,10 +79,8 @@ export default function AuthModal({
         })
       );
 
-      // Close the modal.
       onClose();
 
-      // Fallback redirect in case onLoginSuccess is not provided.
       navigate('/');
     } catch (error) {
       console.error('Login failed:', error);
@@ -117,12 +112,11 @@ export default function AuthModal({
         throw new Error(data.error || 'Google login failed.');
       }
 
-      // Update App.jsx state
       if (onLoginSuccess) {
         onLoginSuccess(data.user);
       }
 
-      // Update auth state for other components
+  
       window.dispatchEvent(
         new CustomEvent('auth-changed', {
           detail: {
@@ -134,7 +128,6 @@ export default function AuthModal({
 
       onClose();
 
-      // Redirect to index/home page
       navigate('/');
     } catch (loginError) {
       console.error('Google login failed:', loginError);
@@ -149,17 +142,12 @@ export default function AuthModal({
 
   return (
     <div
-<<<<<<< HEAD
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[1px] px-4"
-=======
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 backdrop-blur-[1px] px-4"
->>>>>>> 2422c1f414c3950ff2675ae57c90f33379d17770
     >
       <div className="w-full max-w-[520px] bg-white rounded-[25px] shadow-xl px-8 sm:px-12 py-10 relative">
         <button
