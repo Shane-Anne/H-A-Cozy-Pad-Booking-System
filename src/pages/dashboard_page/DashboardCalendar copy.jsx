@@ -55,21 +55,14 @@ export default function DashboardCalendar() {
   const loadEvents = async () => {
     setIsLoading(true);
     setError('');
-    const errors = [];
-
     try {
       const reservationsResponse = await fetch(`${API_BASE_URL}/reservations.php`, { credentials: 'include' });
       const reservationsData = await reservationsResponse.json();
       if (!reservationsResponse.ok) throw new Error(reservationsData.error || 'Unable to load bookings');
       setReservations(reservationsData.reservations || []);
-    } catch (loadError) {
-      errors.push(loadError.message || 'Unable to load bookings');
-    }
 
-    try {
       const statusResponse = await fetch(`${CALENDAR_API_URL}/auth/status`);
       const status = await statusResponse.json();
-      if (!statusResponse.ok) throw new Error(status.error || 'Unable to check Google Calendar connection');
       setIsConnected(status.connected);
       if (status.connected) {
         const response = await fetch(
@@ -82,11 +75,8 @@ export default function DashboardCalendar() {
         setEvents([]);
       }
     } catch (loadError) {
-      setIsConnected(false);
-      setEvents([]);
-      errors.push(loadError.message || 'Unable to connect to Google Calendar');
+      setError(loadError.message || 'Unable to connect to Google Calendar');
     } finally {
-      setError(errors.join('. '));
       setIsLoading(false);
     }
   };
