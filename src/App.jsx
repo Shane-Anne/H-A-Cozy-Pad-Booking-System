@@ -175,6 +175,20 @@ export default function App() {
         >
           <Route path="/host/users" element={<UserManagement />} />
         </Route>
+        <Route
+          path="/help"
+          element={
+            <HelpCenter
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              user={user}
+              onLogout={() => setUser(null)}
+              onOpenSignIn={handleOpenAuth}
+              onOpenRegister={handleOpenRegister}
+              onOpenChat={() => setIsChatOpen(true)}
+            />
+          }
+        />
 
         <Route
           element={
@@ -185,21 +199,6 @@ export default function App() {
             />
           }
         >
-          <Route
-            path="/help"
-            element={
-              <HelpCenter
-                isMenuOpen={isMenuOpen}
-                setIsMenuOpen={setIsMenuOpen}
-                user={user}
-                onLogout={() => setUser(null)}
-                onOpenSignIn={handleOpenAuth}
-                onOpenRegister={handleOpenRegister}
-                onOpenChat={() => setIsChatOpen(true)}
-              />
-            }
-          />
-
           <Route path="/trips" element={<Trips />} />
 
           <Route

@@ -7,10 +7,22 @@ export default function Trips() {
 
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
+
   const [showCancelBox, setShowCancelBox] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
+
+  const [showModifyBox, setShowModifyBox] = useState(false);
+  const [modificationForm, setModificationForm] = useState({
+    checkIn: "",
+    checkOut: "",
+    guests: "",
+    specialRequests: "",
+    reason: "",
+  });
+  const [isSubmittingModification, setIsSubmittingModification] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -45,6 +57,127 @@ export default function Trips() {
 
     loadBookings();
   }, []);
+
+  function openModificationBox() {
+    if (!selectedBooking) {
+      return;
+    }
+
+    const booking = bookings.find(
+      (item) => item.bookingId === selectedBooking
+    );
+
+    if (!booking) {
+      return;
+    }
+
+    setError("");
+    setSuccessMessage("");
+
+    setModificationForm({
+      checkIn: booking.checkIn || "",
+      checkOut: booking.checkOut || "",
+      guests: booking.guests || "",
+      specialRequests: "",
+      reason: "",
+    });
+
+    setShowModifyBox(true);
+  }
+
+  function closeModificationBox() {
+    if (isSubmittingModification) {
+      return;
+    }
+
+    setShowModifyBox(false);
+
+    setModificationForm({
+      checkIn: "",
+      checkOut: "",
+      guests: "",
+      specialRequests: "",
+      reason: "",
+    });
+  }
+
+  async function handleModificationRequest() {
+    if (!selectedBooking) {
+      return;
+    }
+
+    if (
+      !modificationForm.checkIn ||
+      !modificationForm.checkOut ||
+      !modificationForm.guests ||
+      !modificationForm.reason.trim()
+    ) {
+      setError("Please complete the required modification details.");
+      return;
+    }
+
+    try {
+      setIsSubmittingModification(true);
+      setError("");
+      setSuccessMessage("");
+
+      const response = await fetch(
+        `${API_BASE_URL}/submit_booking_request.php`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            bookingId: selectedBooking,
+            requestType: "modification",
+            requestReason: modificationForm.reason.trim(),
+            requestedCheckIn: modificationForm.checkIn,
+            requestedCheckOut: modificationForm.checkOut,
+            requestedGuests: Number(modificationForm.guests),
+            requestedSpecialRequests:
+              modificationForm.specialRequests.trim(),
+          }),
+        }
+      );
+
+      const responseText = await response.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error("The server returned an invalid response.");
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Unable to submit modification request"
+        );
+      }
+
+      setShowModifyBox(false);
+
+      setModificationForm({
+        checkIn: "",
+        checkOut: "",
+        guests: "",
+        specialRequests: "",
+        reason: "",
+      });
+
+      setSuccessMessage(
+        `Modification request for booking #${selectedBooking} has been submitted.`
+      );
+    } catch (err) {
+      console.error("Modification request error:", err);
+      setError(err.message);
+    } finally {
+      setIsSubmittingModification(false);
+    }
+  }
 
   async function handleCancelBooking() {
     if (!selectedBooking || !cancelReason.trim()) {
@@ -152,7 +285,7 @@ export default function Trips() {
                   ? "border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600"
                   : "border-yellow-500 bg-white text-yellow-600"
               }`}
-              onClick={() => {}}
+              onClick={openModificationBox}
             >
               Request to change
             </button>
@@ -300,7 +433,151 @@ export default function Trips() {
                   onClick={handleCancelBooking}
                   className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isCancelling ? "Cancelling..." : "Confirm cancellation"}
+                  {isCancelling
+                    ? "Cancelling..."
+                    : "Confirm cancellation"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showModifyBox && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
+            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+              <h2 className="text-xl font-semibold">
+                Request to change booking
+              </h2>
+
+              <p className="mt-2 text-sm text-gray-600">
+                Submit the changes you would like the owner to review.
+              </p>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Check-in
+                  </label>
+
+                  <input
+                    type="date"
+                    value={modificationForm.checkIn}
+                    onChange={(e) =>
+                      setModificationForm((current) => ({
+                        ...current,
+                        checkIn: e.target.value,
+                      }))
+                    }
+                    disabled={isSubmittingModification}
+                    className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-sm outline-none focus:border-yellow-500 disabled:bg-gray-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Check-out
+                  </label>
+
+                  <input
+                    type="date"
+                    value={modificationForm.checkOut}
+                    onChange={(e) =>
+                      setModificationForm((current) => ({
+                        ...current,
+                        checkOut: e.target.value,
+                      }))
+                    }
+                    disabled={isSubmittingModification}
+                    className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-sm outline-none focus:border-yellow-500 disabled:bg-gray-100"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Number of guests
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={modificationForm.guests}
+                  onChange={(e) =>
+                    setModificationForm((current) => ({
+                      ...current,
+                      guests: e.target.value,
+                    }))
+                  }
+                  disabled={isSubmittingModification}
+                  className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-sm outline-none focus:border-yellow-500 disabled:bg-gray-100"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Special requests
+                </label>
+
+                <textarea
+                  value={modificationForm.specialRequests}
+                  onChange={(e) =>
+                    setModificationForm((current) => ({
+                      ...current,
+                      specialRequests: e.target.value,
+                    }))
+                  }
+                  placeholder="Any updated special requests..."
+                  rows={3}
+                  disabled={isSubmittingModification}
+                  className="mt-2 w-full resize-none rounded-lg border border-gray-300 p-3 text-sm outline-none focus:border-yellow-500 disabled:bg-gray-100"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Reason for change
+                </label>
+
+                <textarea
+                  value={modificationForm.reason}
+                  onChange={(e) =>
+                    setModificationForm((current) => ({
+                      ...current,
+                      reason: e.target.value,
+                    }))
+                  }
+                  placeholder="Why do you want to change your booking?"
+                  rows={3}
+                  disabled={isSubmittingModification}
+                  className="mt-2 w-full resize-none rounded-lg border border-gray-300 p-3 text-sm outline-none focus:border-yellow-500 disabled:bg-gray-100"
+                />
+              </div>
+
+              <div className="mt-5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={isSubmittingModification}
+                  onClick={closeModificationBox}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  disabled={
+                    isSubmittingModification ||
+                    !modificationForm.checkIn ||
+                    !modificationForm.checkOut ||
+                    !modificationForm.guests ||
+                    !modificationForm.reason.trim()
+                  }
+                  onClick={handleModificationRequest}
+                  className="rounded-lg bg-yellow-500 px-4 py-2 text-sm text-white hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmittingModification
+                    ? "Submitting..."
+                    : "Submit request"}
                 </button>
               </div>
             </div>
