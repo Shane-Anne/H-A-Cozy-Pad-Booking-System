@@ -48,6 +48,18 @@ function syncUserProfile($pdo, $userId, $role) {
     }
 }
 
+function getCustomerBookingCount($pdo, $userId) {
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*)
+        FROM bookings b
+        INNER JOIN customer_profiles cp ON cp.customer_id = b.customer_id
+        WHERE cp.user_id = ?
+    ");
+    $stmt->execute([$userId]);
+
+    return (int) $stmt->fetchColumn();
+}
+
 try {
     if ($method === 'GET') {
         $stmt = $pdo->query("
@@ -56,7 +68,7 @@ try {
                 full_name,
                 email,
                 contact_num,
-                role,
+                COALESCE(NULLIF(role, ''), 'customer') AS role,
                 created_at,
                 updated_at
             FROM users
@@ -160,6 +172,22 @@ try {
             exit;
         }
 
+        $currentRoleStatement = $pdo->prepare('SELECT role FROM users WHERE user_id = ?');
+        $currentRoleStatement->execute([$userId]);
+        $currentRole = $currentRoleStatement->fetchColumn();
+
+        if ($currentRole === 'customer' && $role !== 'customer') {
+            $bookingCount = getCustomerBookingCount($pdo, $userId);
+
+            if ($bookingCount > 0) {
+                http_response_code(409);
+                echo json_encode([
+                    'error' => 'This customer cannot be changed to an admin or assistant because they have existing bookings.'
+                ]);
+                exit;
+            }
+        }
+
         if (
             $userId === (int)$_SESSION['user_id'] &&
             $role !== 'admin'
@@ -225,6 +253,16 @@ try {
             http_response_code(400);
             echo json_encode([
                 'error' => 'You cannot delete your own account'
+            ]);
+            exit;
+        }
+
+        $bookingCount = getCustomerBookingCount($pdo, $userId);
+
+        if ($bookingCount > 0) {
+            http_response_code(409);
+            echo json_encode([
+                'error' => 'This customer cannot be deleted because they have existing bookings.'
             ]);
             exit;
         }

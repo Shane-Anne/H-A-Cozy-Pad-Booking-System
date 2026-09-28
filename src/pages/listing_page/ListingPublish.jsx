@@ -1,7 +1,13 @@
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
 import ListingHeader from '../../components/ListingHeader';
-import { useNavigate } from 'react-router-dom';
-import { clearListingDraft, getListingDraft } from '../../lib/listingDraft';
+
+import {
+  clearListingDraft,
+  getListingDraft,
+} from '../../lib/listingDraft';
+
 import { API_BASE_URL } from '../../lib/api';
 
 function ImagePlaceholderIcon() {
@@ -39,28 +45,92 @@ function PinIcon() {
   );
 }
 
-export default function Publish() {
+export default function ListingPublish() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const draft = getListingDraft();
+
+  const propertyTypeNames = {
+    entirePlace: 'Entire place',
+    room: 'Room',
+    hostel: 'Hostel shared-room',
+  };
+
+  const propertyType =
+    propertyTypeNames[draft.placeType] ||
+    'Entire place';
+
+  const images = location.state?.images || [];
+
   const isEditing = !!draft.editingBuildingId;
-  const propertyName = draft.buildingName || 'Property Name';
-  const propertyPlace = [draft.city, draft.country].filter(Boolean).join(', ') || 'Property Place';
+
+  const propertyName =
+    draft.buildingName || 'Property Name';
+
+  const propertyPlace =
+    [draft.city, draft.country]
+      .filter(Boolean)
+      .join(', ') || 'Property Place';
 
   const [agreed, setAgreed] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState('');
 
   const publishListing = async () => {
+    if (!agreed) {
+      setError(
+        'Please accept the Terms and Conditions.'
+      );
+      return;
+    }
+
+    if (!isEditing && images.length === 0) {
+      setError(
+        'Please upload at least one property image.'
+      );
+      return;
+    }
+
+    /*
+     * Make sure listing availability was selected.
+     */
+    if (
+      !draft.availableFrom ||
+      !draft.availableUntil
+    ) {
+      setError(
+        'Please select when the listing can be booked.'
+      );
+      return;
+    }
+
+    /*
+     * Make sure the end date is not before
+     * the start date.
+     */
+    if (
+      draft.availableUntil <
+      draft.availableFrom
+    ) {
+      setError(
+        'The availability end date cannot be before the start date.'
+      );
+      return;
+    }
+
     setIsPublishing(true);
     setError('');
 
-    const location = [
+    const fullLocation = [
       draft.street,
       draft.city,
       draft.state,
       draft.country,
       draft.zip,
-    ].filter(Boolean).join(', ');
+    ]
+      .filter(Boolean)
+      .join(', ') || draft.location || '';
 
     console.log('PUBLISH DATA:', {
   buildingId: draft.editingBuildingId,
@@ -76,36 +146,149 @@ export default function Publish() {
 });
 
     try {
+      const formData = new FormData();
+
+      formData.append(
+        'buildingId',
+        draft.editingBuildingId || ''
+      );
+
+      formData.append(
+        'buildingName',
+        draft.buildingName || ''
+      );
+
+      formData.append(
+        'propertyCategory',
+        draft.propertyCategory || 'home'
+      );
+
+      formData.append(
+        'location',
+        fullLocation
+      );
+
+      formData.append('locationSearch', draft.search || '');
+      formData.append('country', draft.country || '');
+      formData.append('state', draft.state || '');
+      formData.append('city', draft.city || '');
+      formData.append('street', draft.street || '');
+      formData.append('unitLocation', draft.unit || '');
+      formData.append('zip', draft.zip || '');
+      formData.append('propertySize', draft.propertySize || '');
+      formData.append('bathrooms', draft.bathrooms || '0');
+      formData.append('bedroomDetails', JSON.stringify(draft.bedrooms || []));
+      formData.append('basePrice', draft.basePrice || '');
+      formData.append('discounts', JSON.stringify(draft.discounts || []));
+
+      if (
+        draft.latitude !== null &&
+        draft.latitude !== undefined
+      ) {
+        formData.append(
+          'latitude',
+          draft.latitude
+        );
+      }
+
+      if (
+        draft.longitude !== null &&
+        draft.longitude !== undefined
+      ) {
+        formData.append(
+          'longitude',
+          draft.longitude
+        );
+      }
+
+      formData.append(
+        'unitName',
+        propertyType
+      );
+
+      formData.append(
+        'description',
+        draft.description || ''
+      );
+
+      formData.append(
+        'maxGuests',
+        draft.maxGuests || ''
+      );
+
+      formData.append(
+        'ratePerNight',
+        draft.ratePerNight || ''
+      );
+
+      /*
+       * Listing availability
+       */
+      formData.append(
+        'availableFrom',
+        draft.availableFrom
+      );
+
+      formData.append(
+        'availableUntil',
+        draft.availableUntil
+      );
+
+      /*
+       * Amenities
+       */
+      (draft.amenities || []).forEach(
+        (amenity) => {
+          formData.append(
+            'amenities[]',
+            amenity
+          );
+        }
+      );
+
+      /*
+       * Images
+       */
+      images.forEach((image) => {
+        formData.append(
+          'images[]',
+          image
+        );
+      });
+
       const response = await fetch(
-        `${API_BASE_URL}/${isEditing ? 'edit_listing.php' : 'create_listing.php'}`,
+        `${API_BASE_URL}/${
+          isEditing
+            ? 'edit_listing.php'
+            : 'create_listing.php'
+        }`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            buildingId: draft.editingBuildingId,
-            buildingName: draft.buildingName,
-            location,
-            latitude: draft.latitude ?? null,
-            longitude: draft.longitude ?? null,
-            unitName: 'Entire place',
-            description: draft.description,
-            maxGuests: draft.maxGuests,
-            ratePerNight: draft.ratePerNight,
-            amenities: draft.amenities || [],
-          }),
+          body: formData,
         }
       );
 
       const result = await response.json();
+
       if (!response.ok) {
-        throw new Error(result.error || 'Unable to publish listing');
+        throw new Error(
+          result.error ||
+            result.message ||
+            'Unable to publish listing'
+        );
       }
 
       clearListingDraft();
+
       navigate('/host/listings');
+
     } catch (publishError) {
-      setError(publishError.message);
+      setError(
+        publishError.message ||
+          'Unable to publish listing.'
+      );
+
       setIsPublishing(false);
     }
   };
@@ -115,11 +298,15 @@ export default function Publish() {
 
       {/* Header */}
       <ListingHeader
-        onOpenQuestions={() => console.log('Questions')}
-        onSaveAndExit={() => console.log('Save & Exit')}
+        onOpenQuestions={() =>
+          console.log('Questions')
+        }
+        onSaveAndExit={() =>
+          console.log('Save & Exit')
+        }
       />
 
-      {/* Main content */}
+      {/* Main */}
       <main className="flex-1 flex flex-col">
 
         <div className="w-full max-w-[560px] mx-auto pt-10 md:pt-11 px-6">
@@ -131,33 +318,69 @@ export default function Publish() {
 
           {/* Summary card */}
           <div className="flex items-center gap-4 border border-black rounded-[19px] px-5 py-4 mb-7">
+
             <div className="w-14 h-14 rounded-xl bg-neutral-200 flex items-center justify-center shrink-0">
               <ImagePlaceholderIcon />
             </div>
 
             <div>
+
               <p className="text-[15px] font-semibold leading-tight">
                 {propertyName}
               </p>
+
               <div className="flex items-center gap-1.5 mt-1">
                 <PinIcon />
+
                 <p className="text-[13px] text-neutral-600 leading-tight">
                   {propertyPlace}
                 </p>
               </div>
+
+              {/* Place type */}
+              <p className="text-[12px] text-neutral-500 mt-1">
+                {propertyType}
+              </p>
+
+              <p className="text-[12px] text-neutral-500 mt-1">
+                {images.length}{' '}
+                {images.length === 1
+                  ? 'photo'
+                  : 'photos'}{' '}
+                selected
+              </p>
+
             </div>
+
           </div>
 
           {/* Divider */}
           <hr className="border-neutral-300 mb-6" />
 
           {/* Terms */}
-          <h2 className="text-[15px] font-semibold mb-3">Accept Terms &amp; Condition</h2>
+          <h2 className="text-[15px] font-semibold mb-3">
+            Accept Terms &amp; Condition
+          </h2>
 
           <label className="flex items-start gap-3 cursor-pointer">
+
             <span
-              onClick={() => setAgreed((prev) => !prev)}
-              className="w-6 h-6 mt-0.5 rounded-md border border-black flex items-center justify-center shrink-0 bg-white"
+              onClick={() =>
+                setAgreed((prev) => !prev)
+              }
+              className="
+                w-6
+                h-6
+                mt-0.5
+                rounded-md
+                border
+                border-black
+                flex
+                items-center
+                justify-center
+                shrink-0
+                bg-white
+              "
             >
               {agreed && (
                 <svg
@@ -173,16 +396,27 @@ export default function Publish() {
                 </svg>
               )}
             </span>
+
             <span
-              onClick={() => setAgreed((prev) => !prev)}
+              onClick={() =>
+                setAgreed((prev) => !prev)
+              }
               className="text-[14px] leading-snug text-neutral-800"
             >
-              I acknowledge that I have read and agree to the Terms and
-              Conditions and Privacy Policy. Additionally, I confirm my
-              compliance with all relevant local laws and regulations
+              I acknowledge that I have read and agree
+              to the Terms and Conditions and Privacy
+              Policy. Additionally, I confirm my compliance
+              with all relevant local laws and regulations.
             </span>
+
           </label>
-          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+
+          {error && (
+            <p className="mt-4 text-sm text-red-600">
+              {error}
+            </p>
+          )}
+
         </div>
 
         {/* Bottom buttons */}
@@ -191,11 +425,15 @@ export default function Publish() {
           {/* Back */}
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() =>
+              window.history.back()
+            }
             className="
-              w-[142px] h-[50px]
+              w-[142px]
+              h-[50px]
               rounded-full
-              border border-black
+              border
+              border-black
               bg-white
               text-[20px]
               hover:bg-neutral-100
@@ -211,7 +449,8 @@ export default function Publish() {
             disabled={!agreed || isPublishing}
             onClick={publishListing}
             className={`
-              w-[142px] h-[50px]
+              w-[142px]
+              h-[50px]
               rounded-full
               border
               text-[20px]
@@ -222,10 +461,14 @@ export default function Publish() {
                   : 'border-neutral-300 bg-neutral-100 text-neutral-400 cursor-not-allowed'
               }
             `}
-            >
-            {isPublishing ? 'Publishing...' : 'Publish'}
+          >
+            {isPublishing
+              ? 'Publishing...'
+              : 'Publish'}
           </button>
+
         </div>
+
       </main>
     </div>
   );

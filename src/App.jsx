@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from 'react-router-dom';
+
 import { API_BASE_URL } from './lib/api';
 
 import AuthModal from './components/AuthModal';
@@ -13,6 +19,7 @@ import ListedProperty from './pages/ListedProperty';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // dashboard pages
+import DashboardOverview from './pages/dashboard_page/dashboardOverview';
 import DashboardListings from './pages/dashboard_page/DashboardListings';
 import DashboardReservations from './pages/dashboard_page/DashboardReservations';
 import DashboardCalendar from './pages/dashboard_page/DashboardCalendar';
@@ -30,15 +37,25 @@ import Chatbot from './components/Chatbot';
 // listing pages
 import PlaceOffer from './pages/listing_page/PlaceOffer';
 import UnitListing from './pages/listing_page/UnitListing';
-import PropertyDescription from './pages/listing_page/PropertyDescription';
 import PlaceDescription from './pages/listing_page/PlaceDescription';
 import PlaceLocation from './pages/listing_page/PlaceLocation';
 import PlaceRate from './pages/listing_page/PlaceRate';
 import PlaceDiscount from './pages/listing_page/PlaceDiscount';
 import PlaceDetail from './pages/listing_page/PlaceDetail';
 import ListingPublish from './pages/listing_page/ListingPublish';
+import PlaceImages from './pages/listing_page/PlaceImages';
 
 export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}
+
+function AppContent() {
+  const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,7 +63,11 @@ export default function App() {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  const handleOpenAuth = () => {
+  const [loginRedirect, setLoginRedirect] = useState('/');
+
+
+  const handleOpenAuth = (redirectTo = '/') => {
+    setLoginRedirect(redirectTo);
     setIsRegisterModalOpen(false);
     setIsAuthModalOpen(true);
   };
@@ -56,8 +77,19 @@ export default function App() {
     setIsRegisterModalOpen(true);
   };
 
+  
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+
+    setIsAuthModalOpen(false);
+
+    navigate(loginRedirect || '/');
+  };
+
   useEffect(() => {
-    fetch(`${API_BASE_URL}/check_auth.php`, { credentials: 'include' })
+    fetch(`${API_BASE_URL}/check_auth.php`, {
+      credentials: 'include',
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.authenticated) {
@@ -78,11 +110,14 @@ export default function App() {
     };
 
     window.addEventListener('auth-changed', handleAuthChange);
-    return () => window.removeEventListener('auth-changed', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('auth-changed', handleAuthChange);
+    };
   }, []);
 
   return (
-    <Router>
+    <>
       <Routes>
         <Route
           path="/"
@@ -92,7 +127,7 @@ export default function App() {
               setIsMenuOpen={setIsMenuOpen}
               user={user}
               onLogout={() => setUser(null)}
-              onOpenSignIn={handleOpenAuth}
+              onOpenSignIn={() => handleOpenAuth('/')}
               onOpenRegister={handleOpenRegister}
             />
           }
@@ -106,14 +141,29 @@ export default function App() {
               setIsMenuOpen={setIsMenuOpen}
               user={user}
               onLogout={() => setUser(null)}
-              onOpenSignIn={handleOpenAuth}
+              onOpenSignIn={() => handleOpenAuth('/')}
               onOpenRegister={handleOpenRegister}
             />
           }
         />
 
-        <Route element={<ProtectedRoute user={user} isLoading={isLoading} />}>
-          <Route path="/profile" element={<Profile user={user} />} />
+        <Route
+          path="/host/FaqManagement"
+          element={<FaqManagement />}
+        />
+
+        <Route
+          element={
+            <ProtectedRoute
+              user={user}
+              isLoading={isLoading}
+            />
+          }
+        >
+          <Route
+            path="/profile"
+            element={<Profile user={user} />}
+          />
         </Route>
 
         <Route
@@ -128,12 +178,59 @@ export default function App() {
           <Route path="/host/listings" element={<DashboardListings />} />
           <Route path="/host/reservations" element={<DashboardReservations />} />
           <Route path="/host/calendar" element={<DashboardCalendar />} />
-          <Route path="/host/faqs" element={<FaqManagement />} />
           <Route path="/host/listing" element={<UnitListing />} />
           <Route
-            path="/host/listing/PropertyDescription"
-            element={<PropertyDescription />}
+            path="/host/listing/PlaceDescription"
+            element={<PlaceDescription />}
           />
+          <Route
+            path="/host/listing/PlaceOffer"
+            element={<PlaceOffer />}
+          />
+          <Route
+            path="/host/listing/PlaceLocation"
+            element={<PlaceLocation />}
+          />
+          <Route
+            path="/host/listing/PlaceRate"
+            element={<PlaceRate />}
+          />
+          <Route
+            path="/host/listing/PlaceDiscount"
+            element={<PlaceDiscount />}
+          />
+          <Route
+            path="/host/listing/PlaceDetail"
+            element={<PlaceDetail />}
+          />
+          <Route
+            path="/host/listing/ListingPublish"
+            element={<ListingPublish />}
+          />
+          <Route
+            path="/host/listing/PlaceImages"
+            element={<PlaceImages />}
+          />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute
+              user={user}
+              isLoading={isLoading}
+              allowedRoles={['admin', 'assistant']}
+            />
+          }
+        >
+          <Route path="/host/listings" element={<DashboardListings />} />
+          <Route
+            path="/host/reservations"
+            element={<DashboardReservations />}
+          />
+          <Route path="/host/calendar" element={<DashboardCalendar />} />
+          <Route path="/host/faqs" element={<FaqManagement />} />
+          <Route path="/host/listing" element={<UnitListing />} />
+
           <Route
             path="/host/listing/PlaceDescription"
             element={<PlaceDescription />}
@@ -173,8 +270,17 @@ export default function App() {
             />
           }
         >
-          <Route path="/host/users" element={<UserManagement />} />
+          <Route
+            path="/host/overview"
+            element={<DashboardOverview />}
+          />
+          
+          <Route
+            path="/host/users"
+            element={<UserManagement />}
+          />
         </Route>
+
         <Route
           path="/help"
           element={
@@ -183,7 +289,7 @@ export default function App() {
               setIsMenuOpen={setIsMenuOpen}
               user={user}
               onLogout={() => setUser(null)}
-              onOpenSignIn={handleOpenAuth}
+              onOpenSignIn={() => handleOpenAuth('/')}
               onOpenRegister={handleOpenRegister}
               onOpenChat={() => setIsChatOpen(true)}
             />
@@ -209,7 +315,7 @@ export default function App() {
                 onLogout={() => setUser(null)}
                 isMenuOpen={isMenuOpen}
                 setIsMenuOpen={setIsMenuOpen}
-                onOpenSignIn={handleOpenAuth}
+                onOpenSignIn={() => handleOpenAuth('/')}
                 onOpenRegister={handleOpenRegister}
               />
             }
@@ -223,7 +329,7 @@ export default function App() {
                 onLogout={() => setUser(null)}
                 isMenuOpen={isMenuOpen}
                 setIsMenuOpen={setIsMenuOpen}
-                onOpenSignIn={handleOpenAuth}
+                onOpenSignIn={() => handleOpenAuth('/')}
                 onOpenRegister={handleOpenRegister}
               />
             }
@@ -234,7 +340,7 @@ export default function App() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
-        onLoginSuccess={(userData) => setUser(userData)}
+        onLoginSuccess={handleLoginSuccess}
       />
 
       <RegisterModal
@@ -247,6 +353,6 @@ export default function App() {
         onClose={() => setIsChatOpen(false)}
         onToggle={() => setIsChatOpen(!isChatOpen)}
       />
-    </Router>
+    </>
   );
 }

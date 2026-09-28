@@ -1,4 +1,5 @@
 <?php
+
 require 'db.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -43,7 +44,11 @@ if (strlen($guestName) > 50 || !preg_match('/^[0-9]{11}$/', $guestContactNum)) {
 $checkInDate = DateTime::createFromFormat('Y-m-d', $checkIn);
 $checkOutDate = DateTime::createFromFormat('Y-m-d', $checkOut);
 
-if (!$checkInDate || !$checkOutDate || $checkOutDate <= $checkInDate) {
+if (
+    !$checkInDate ||
+    !$checkOutDate ||
+    $checkOutDate <= $checkInDate
+) {
     http_response_code(400);
     echo json_encode([
         'error' => 'Check-out must be after check-in'
@@ -67,7 +72,9 @@ try {
          FROM customer_profiles
          WHERE user_id = ?'
     );
+
     $customer->execute([$_SESSION['user_id']]);
+
     $customerId = $customer->fetchColumn();
 
     if (!$customerId) {
@@ -79,11 +86,18 @@ try {
     }
 
     $unit = $pdo->prepare(
-        'SELECT unit_id, max_guests, rate_per_night
+        'SELECT
+            unit_id,
+            max_guests,
+            rate_per_night,
+            available_from,
+            available_until
          FROM units
          WHERE unit_id = ?'
     );
+
     $unit->execute([$unitId]);
+
     $unitData = $unit->fetch(PDO::FETCH_ASSOC);
 
     if (!$unitData) {
@@ -93,6 +107,37 @@ try {
         ]);
         exit;
     }
+
+    $availableFrom = $unitData['available_from'];
+    $availableUntil = $unitData['available_until'];
+
+    if (
+        empty($availableFrom) ||
+        empty($availableUntil)
+    ) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'This listing does not have a valid availability period.'
+        ]);
+        exit;
+    }
+
+    if ($checkIn < $availableFrom) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'The selected check-in date is before this listing becomes available.'
+        ]);
+        exit;
+    }
+
+    if ($checkOut > $availableUntil) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'The selected stay extends beyond this listing’s availability period.'
+        ]);
+        exit;
+    }
+
 
     if ($guests > (int) $unitData['max_guests']) {
         http_response_code(400);
@@ -145,6 +190,7 @@ try {
         exit;
     }
 
+
     $pdo->beginTransaction();
 
     $lockedUnit = $pdo->prepare(
@@ -153,7 +199,9 @@ try {
          WHERE unit_id = ?
          FOR UPDATE'
     );
+
     $lockedUnit->execute([$unitId]);
+
 
     $overlap = $pdo->prepare(
         'SELECT booking_id
@@ -164,6 +212,7 @@ try {
          AND check_out_date > ?
          LIMIT 1'
     );
+
     $overlap->execute([
         $unitId,
         $checkOut,
@@ -180,9 +229,17 @@ try {
         exit;
     }
 
+
     $booking = $pdo->prepare(
         'INSERT INTO bookings
-            (customer_id, unit_id, check_in_date, check_out_date, num_of_guests, status)
+            (
+                customer_id,
+                unit_id,
+                check_in_date,
+                check_out_date,
+                num_of_guests,
+                status
+            )
          VALUES (?, ?, ?, ?, ?, \'payment_review\')'
     );
 
@@ -203,7 +260,9 @@ try {
         !mkdir($uploadDirectory, 0755, true) &&
         !is_dir($uploadDirectory)
     ) {
-        throw new RuntimeException('Unable to create upload directory');
+        throw new RuntimeException(
+            'Unable to create upload directory'
+        );
     }
 
     $validIdPath = 'not_uploaded';
@@ -213,7 +272,9 @@ try {
         $_FILES['govId']['error'] !== UPLOAD_ERR_NO_FILE
     ) {
         if ($_FILES['govId']['error'] !== UPLOAD_ERR_OK) {
-            throw new RuntimeException('Unable to upload government ID');
+            throw new RuntimeException(
+                'Unable to upload government ID'
+            );
         }
 
         if ($_FILES['govId']['size'] > 1024 * 1024) {
@@ -252,6 +313,7 @@ try {
         }
     }
 
+
     $proofOfPaymentPath =
         'uploads/bookings/' .
         $bookingId .
@@ -269,7 +331,14 @@ try {
 
     $details = $pdo->prepare(
         'INSERT INTO booking_details
-            (booking_id, guest_name, guest_contact_num, valid_id_path, vehicle_type, special_requests)
+            (
+                booking_id,
+                guest_name,
+                guest_contact_num,
+                valid_id_path,
+                vehicle_type,
+                special_requests
+            )
          VALUES (?, ?, ?, ?, ?, ?)'
     );
 
@@ -282,12 +351,25 @@ try {
         $specialRequests ?: null
     ]);
 
-    $nights = (int) $checkOutDate->diff($checkInDate)->days;
-    $amount = (float) $unitData['rate_per_night'] * $nights;
+    $nights = (int) $checkOutDate
+        ->diff($checkInDate)
+        ->days;
+
+    $amount =
+        (float) $unitData['rate_per_night'] *
+        $nights;
 
     $payment = $pdo->prepare(
         'INSERT INTO payments
-            (booking_id, amount, payment_method, proof_of_payment, payment_status, verified_by, verified_at)
+            (
+                booking_id,
+                amount,
+                payment_method,
+                proof_of_payment,
+                payment_status,
+                verified_by,
+                verified_at
+            )
          VALUES (?, ?, ?, ?, \'pending\', NULL, NULL)'
     );
 
@@ -308,11 +390,13 @@ try {
     ]);
 
 } catch (Throwable $error) {
+
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
 
     http_response_code(500);
+
     echo json_encode([
         'error' => 'Unable to create booking'
     ]);

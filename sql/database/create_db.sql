@@ -35,7 +35,15 @@ create table IF NOT EXISTS customer_profiles(
 create table IF NOT EXISTS buildings(
     building_id int auto_increment primary key,
     building_name varchar(100) not null,
+    property_category varchar(100) NOT NULL DEFAULT 'Home-type property',
     location varchar(150) not null,
+    location_search varchar(255) null,
+    country varchar(100) null,
+    state varchar(100) null,
+    city varchar(100) null,
+    street varchar(150) null,
+    unit_location varchar(50) null,
+    zip varchar(20) null,
     latitude decimal(10, 7) null,
     longitude decimal(10, 7) null,
     created_at timestamp default current_timestamp
@@ -46,9 +54,16 @@ create table IF NOT EXISTS units(
     building_id int not null,
     unit_name varchar(100) not null,
     description text null,
+    property_size varchar(100) null,
     max_guests int not null default 1,
+    bathrooms int not null default 0,
+    bedroom_details json null,
     rate_per_night decimal(10, 2) not null,
+    base_price decimal(10, 2) null,
+    discounts json null,
     status enum('available', 'occupied', 'maintenance', 'unavailable') not null default 'available',
+    available_from date null,
+    available_until date null,
     created_at timestamp default current_timestamp,
     constraint fk_unit_building
         foreign key (building_id)
@@ -63,6 +78,8 @@ create table IF NOT EXISTS bookings(
     check_in_date date not null,
     check_out_date date not null,
     num_of_guests int not null default 1,
+    cancellation_reason text null,
+    cancelled_at datetime null,
     status enum('pending', 'awaiting_payment', 'payment_review', 'confirmed', 'checked_in', 'checked_out', 
                 'cancelled', 'rejected') not null default 'pending',
     created_at timestamp default current_timestamp,
@@ -150,7 +167,7 @@ create table NOT EXISTS payments(
     proof_of_payment varchar(255) not null,
     payment_status enum('pending', 'verified', 'rejected', 'refunded') not null default 'pending',
     verified_by int null,
-    verified_at datetime not null,
+    verified_at datetime null,
     created_at timestamp default current_timestamp,
     constraint fk_payment_booking
         foreign key (booking_id)
@@ -202,11 +219,31 @@ CREATE TABLE IF NOT EXISTS booking_requests (
     request_type ENUM('cancellation', 'modification') NOT NULL,
     request_reason TEXT NOT NULL,
     request_status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    requested_check_in DATE NULL,
+    requested_check_out DATE NULL,
+    requested_guests INT NULL,
+    requested_special_requests TEXT NULL,
+    payment_amount DECIMAL(10,2) NULL,
+    refund_amount DECIMAL(10,2) NULL,
+    proof_of_payment VARCHAR(255) NULL,
+    payment_status ENUM('not_required', 'pending', 'verified', 'rejected') NOT NULL DEFAULT 'not_required',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_booking_request_booking
         FOREIGN KEY (booking_id)
         REFERENCES bookings(booking_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE unit_images (
+    image_id INT AUTO_INCREMENT PRIMARY KEY,
+    unit_id INT NOT NULL,
+    image_path VARCHAR(500) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_unit_images_unit
+        FOREIGN KEY (unit_id)
+        REFERENCES units(unit_id)
         ON DELETE CASCADE
 );

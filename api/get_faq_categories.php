@@ -36,4 +36,8 @@ try {
     echo json_encode([
         'error' => 'Unable to load FAQ categories'
     ]);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 1376984c76a57e6e71d0c01e7bb26d339fd630ca
